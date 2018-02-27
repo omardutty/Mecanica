@@ -33,8 +33,9 @@ public:
 	void Update() {
 		pos = VAR::nextPoint(pos, vel, 0.0333);
 		vel = VAR::nextVelocity(vel, glm::vec3(0.f, -9.81f, 0.f), 0.0333);
+		lifeTime--;
 		if (pos.y <= 0 || pos.y >= 10) {
-			vel.y -= 1.8*vel.y;
+			vel.y -= 1.6*vel.y;
 
 		}
 		if (pos.x <= -5 || pos.x >= 5) {
@@ -91,6 +92,11 @@ void PhysicsUpdate(float dt) {
 	// ...........................
 	p1 = new Particle();
 	particles.push_back(p1);
+
+	if (particles[0]->lifeTime <= 0 && particles.size()>0) {
+		particles.pop_front();
+	}
+	
 	//Llenar array de la gpu
 	int i = 0;
 	for (Particle* p1 : particles) {
@@ -101,9 +107,6 @@ void PhysicsUpdate(float dt) {
 		i += 3;
 	}
 	std::cout << posParticula[0] << " " << posParticula[1] << " " << posParticula[2] << std::endl;
-	/*posParticula[0] = p1->pos.x;
-	posParticula[1] = p1->pos.y;
-	posParticula[2] = p1->pos.z;*/
 
 
 
