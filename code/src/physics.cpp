@@ -35,7 +35,6 @@ void PhysicsInit() {
 	posParticula[0] = 4;
 	posParticula[1] = 2;
 	posParticula[2] = 3;
-	for (int i);
 
 }
 
