@@ -11,6 +11,7 @@ float arr[30];
 glm::vec3 p = { 0.f,8.f,0.f };
 glm::vec3 v = { 4.f,10.f,0.f };
 glm::vec3 a = { 0.f,-9.81f,0.f };
+int LifeTime = 100;
 
 
 namespace LilSpheres {
@@ -47,9 +48,8 @@ public:
 	}
 	Particle() {
 		pos = glm::vec3(0, 8, 0);
-		//srand(time(NULL));
 		vel = glm::vec3((rand() % (30 + 30 + 1) - 30)*.1f, 10, (rand() % (30 + 30 + 1) - 30)*.1f);
-		lifeTime = 100;
+		lifeTime = LifeTime;
 	}
 	~Particle() {}
 };
@@ -65,6 +65,7 @@ void GUI() {
 	// Do your GUI code here....
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
+		ImGui::Text("Particle Lifetime: %.0f frames", (float)LifeTime);
 
 	}
 	// .........................
@@ -74,6 +75,7 @@ void GUI() {
 	// Example code -- ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
 	if (show_test_window) {
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+		
 		ImGui::ShowTestWindow(&show_test_window);
 	}
 }
@@ -81,6 +83,7 @@ void GUI() {
 void PhysicsInit() {
 	// Do your initialization code here...
 	// ...................................
+	srand(time(NULL));
 	/*for (int i = 0; i < 10; i++) {
 	p1 = new Particle();
 	particles.push_back(p1);
