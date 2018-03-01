@@ -31,18 +31,18 @@ namespace Capsule {
 	void drawCapsule();
 }
 namespace VAR {
-	glm::vec3 C;
+	glm::vec3 C = { 0,1,0 };
 	glm::vec3 e1;
-	glm::vec3 e2;
+	glm::vec3 c1 = { 1,1,2 }, c2 = {3,1,0};
 	const glm::vec3 gravity = { 0.f, -9.81f, 0.f };
-	float SphereRad, CapusleRad;
+	float SphereRad = 1, CapusleRad = 1;
 	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate);
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
 	glm::vec3 calculoN(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r);
-	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float alpha, float radius);
-	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 C, float alpha);
+	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
+	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 }
 extern void setupPrims();
 extern void renderPrims();
@@ -118,8 +118,8 @@ void GLinit(int width, int height) {
 	Box::setupCube();
 	Axis::setupAxis();
 	setupPrims();
-	Sphere::setupSphere(glm::vec3(-2.f, 2.f, 1.f), 1.f);
-	Capsule::setupCapsule(glm::vec3(1.f, 1.f, 2.f), glm::vec3(3.f, 1.f, 0.f), 1.f);
+	Sphere::setupSphere(VAR::C,VAR::SphereRad);
+	Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
 }
 
 void GLcleanup() {
@@ -1067,12 +1067,16 @@ namespace VAR {
 		return glm::normalize(Q - C);
 	}
 
-	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float alpha, float radius) {
+	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius) {
 		glm::vec3 n = calculoN(lastPoint, point, C, radius);
-		return n;
+		float d = -(n.x*lastPoint.x + n.y*lastPoint.y + n.z*lastPoint.z);
+		float dotProuct = lastPoint.x*n.x + lastPoint.y*n.y + lastPoint.z*n.z;
+		return glm::vec3((lastPoint.x - 2 * (dotProuct + d)*n.x), (lastPoint.y - 2 * (dotProuct + d)*n.y), (lastPoint.z - 2 * (dotProuct + d)*n.z));
 	}
 
-	/*glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 C, float alpha) {
-
-	}*/
+	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint,glm::vec3 point, glm::vec3 C, float radius) {
+		glm::vec3 n = calculoN(lastPoint, point, C, radius);
+		float dotProduct = lastVelocity.x*n.x + lastVelocity.y*n.y + lastVelocity.z*n.z;
+		return glm::vec3(lastVelocity.x-2*(dotProduct)*n.x, lastVelocity.y - 2 * (dotProduct)*n.y, lastVelocity.z - 2 * (dotProduct)*n.z);
+	}
 }
