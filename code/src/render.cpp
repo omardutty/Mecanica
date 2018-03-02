@@ -3,6 +3,7 @@
 #include <glm\gtc\matrix_transform.hpp>
 #include <cstdio>
 #include <cassert>
+#include<iostream>
 
 #include "GL_framework.h"
 
@@ -40,7 +41,7 @@ namespace VAR {
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
-	glm::vec3 calculoN(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r);
+	glm::vec3 calculoN(glm::vec3 Q, glm::vec3 C);
 	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 }
@@ -119,7 +120,7 @@ void GLinit(int width, int height) {
 	Axis::setupAxis();
 	setupPrims();
 	Sphere::setupSphere(VAR::C,VAR::SphereRad);
-	Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
+	//Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
 }
 
 void GLcleanup() {
@@ -127,7 +128,7 @@ void GLcleanup() {
 	Axis::cleanupAxis();
 	cleanupPrims();
 	Sphere::cleanupSphere();
-	Capsule::cleanupCapsule();
+	//Capsule::cleanupCapsule();
 }
 
 void GLrender() {
@@ -144,7 +145,7 @@ void GLrender() {
 	Box::drawCube();
 	Axis::drawAxis();
 	Sphere::drawSphere();
-	Capsule::drawCapsule();
+	//Capsule::drawCapsule();
 	renderPrims();
 
 	ImGui::Render();
@@ -1047,36 +1048,104 @@ namespace VAR {
 	float distance(glm::vec3 p1, glm::vec3 p2) {
 		return sqrt(pow(p1.x*p2.x, 2) + pow(p1.y*p2.y, 2) + pow(p1.z*p2.z, 2));
 	}
-
-	glm::vec3 calculoN(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r) {
+	float calculoAlpha(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r) {
 		float a;
 		float b;
 		float c;
 		float alpha, alpha2;
-		a = (pow(P2.x, 2) - 2 * P1.x*P2.x + pow(P1.x, 2)) + (pow(P2.y, 2) - 2 * P1.y*P2.y + pow(P1.y, 2)) + (pow(P2.z, 2) - 2 * P1.z*P2.z + pow(P1.z, 2));
-		b = (2 * P1.x*(P2.x - P1.x) - 2 * (P2.x - P1.x)*C.x) + (2 * P1.y*(P2.y - P1.y) - 2 * (P2.y - P1.y)*C.y) + (2 * P1.z*(P2.z - P1.z) - 2 * (P2.z - P1.z)*C.z);
-		c = pow(P1.x, 2) + pow(P1.y, 2) + pow(P1.z, 2) - 2 * (P1.x*C.x) - 2 * (P1.y*C.y) - 2 * (P1.z*C.z) + pow(C.x, 2) + pow(C.y, 2) + pow(C.z, 2);
+		a = (pow(P2.x, 2) - 2 * P1.x * P2.x + pow(P1.x, 2)) + (pow(P2.y, 2) - 2 * P1.y * P2.y + pow(P1.y, 2)) + (pow(P2.z, 2) - 2 * P1.z * P2.z + pow(P1.z, 2));
+		b = (2 * P1.x * (P2.x - P1.x) - 2 * (P2.x - P1.x) * C.x) + (2 * P1.y*(P2.y - P1.y) - 2 * (P2.y - P1.y) * C.y) + (2 * P1.z * (P2.z - P1.z) - 2 * (P2.z - P1.z) * C.z);
+		c = pow(P1.x, 2) + pow(P1.y, 2) + pow(P1.z, 2) - 2 * (P1.x*C.x) - 2 * (P1.y*C.y) - 2 * (P1.z*C.z) + pow(C.x, 2) + pow(C.y, 2) + pow(C.z, 2) - pow(r, 2);
 
-		alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / 2 * a;
-		alpha2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / 2 * a;
-		if (alpha>alpha2) {
-			glm::vec3 Q = P2 + (P2 - P1)*alpha2;
-			return glm::normalize(Q - C);
+
+		/*a = (pow(2.0328, 2) - 2 * 1.8996 * 2.0328 + pow(1.8996, 2)) + (pow(2.6023, 2) - 2 * 2.9683 * 2.6023 + pow(2.9683, 2)) + (pow(1, 2) - 2 * 1 * 1 + pow(1, 2));
+		b = (2 * 1.8996 * (2.0328 - 1.8996) - 2 * (2.0328 - 1.8996) * 2) + (2 * 2.9683*(2.6023 - 2.9683) - 2 * (2.6023 - 2.9683) * 1) + (2 * 1 * (1 - 1) - 2 * (1 - 1) * 1.5);
+		c = pow(1.8996, 2) + pow(2.9683, 2) + pow(1, 2) + (- 2 * (1.8996*2)) + (- 2 * (2.9683 *1)) +  (- 2 * (1*1.5)) + pow(2, 2) + pow(1, 2) + pow(1.5, 2) - 4;
+		*/
+		//std::cout << c << std::endl;
+
+		alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
+		//std::cout << alpha <<std::endl;
+		alpha2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
+		//std::cout << alpha2 << std::endl;
+
+		if (alpha > alpha2) {
+			return alpha2;
 		}
-		glm::vec3 Q = P2 + (P2 - P1)*alpha;
+		return alpha2;
+	}
+	glm::vec3 calculoQ(glm::vec3 P1, glm::vec3 P2, float alpha) {
+		glm::vec3 Q;
+
+		float vx, vy, vz;
+		vx = P2.x - P1.x;
+		vy = P2.y - P1.y;
+		vz = P2.z - P1.z;
+
+		Q.x = P1.x + (vx)*alpha;
+		Q.y = P1.y + (vy)*alpha;
+		Q.z = P1.z + (vz)*alpha;
+
+		//Q.x = 1.912;
+		//Q.y = 2.934;
+		//Q.z = 1;
+		/*	std::cout << "1-  x:"<< Q.x << " y:" << Q.y <<" z:"<< Q.z  << std::endl;*/
+
+		return Q;
+	}
+	glm::vec3 calculoN(glm::vec3 Q, glm::vec3 C) {
 		return glm::normalize(Q - C);
 	}
 
 	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius) {
-		glm::vec3 n = calculoN(lastPoint, point, C, radius);
-		float d = -(n.x*lastPoint.x + n.y*lastPoint.y + n.z*lastPoint.z);
-		float dotProuct = lastPoint.x*n.x + lastPoint.y*n.y + lastPoint.z*n.z;
-		return glm::vec3((lastPoint.x - 2 * (dotProuct + d)*n.x), (lastPoint.y - 2 * (dotProuct + d)*n.y), (lastPoint.z - 2 * (dotProuct + d)*n.z));
+		//glm::vec3 p4; glm::vec3 p5;
+		//p4.x = 1.8996;
+		//p4.y = 2.9683;
+		//p4.z = 1;
+
+		//p5.x = 2.0328;
+		//p5.y = 2.6025;
+		//p5.z = 1;
+
+
+
+		float alpha = calculoAlpha(lastPoint, point, C, radius);
+		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
+		glm::vec3 n = calculoN(Q, C);
+
+		/*float alpha = calculoAlpha(lastPoint, point, C, radius);
+		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
+		glm::vec3 n = calculoN(Q, C);*/
+
+		float d = -((n.x * Q.x) + (n.y * Q.y) + (n.z * Q.z));
+
+		float dotProuct = (point.x * n.x) + (point.y * n.y) + (point.z * n.z);
+
+		return glm::vec3((point.x - 2 * (dotProuct + d)*n.x), (point.y - 2 * (dotProuct + d)*n.y), (point.z - 2 * (dotProuct + d)*n.z));
 	}
 
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint,glm::vec3 point, glm::vec3 C, float radius) {
-		glm::vec3 n = calculoN(lastPoint, point, C, radius);
-		float dotProduct = lastVelocity.x*n.x + lastVelocity.y*n.y + lastVelocity.z*n.z;
-		return glm::vec3(lastVelocity.x-2*(dotProduct)*n.x, lastVelocity.y - 2 * (dotProduct)*n.y, lastVelocity.z - 2 * (dotProduct)*n.z);
+
+		//glm::vec3 p4; glm::vec3 p5;
+		//p4.x = 1.8996;
+		//p4.y = 2.9683;
+		//p4.z = 1;
+
+		//p5.x = 2.0328;
+		//p5.y = 2.6025;
+		//p5.z = 1;
+
+		//glm::vec3 vel;
+		//vel.x = 4;
+		//vel.y = -11.304;
+		//vel.z = 0;
+
+		float alpha = calculoAlpha(lastPoint, point, C, radius);
+		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
+		glm::vec3 n = calculoN(Q, C);
+
+		float dotProduct = (lastVelocity.x * n.x) + (lastVelocity.y * n.y) + (lastVelocity.z * n.z);
+		std::cout << "dot: " << dotProduct;
+		return glm::vec3(lastVelocity.x -2 * (dotProduct) * n.x, lastVelocity.y - 2 * (dotProduct) * n.y, lastVelocity.z - 2 * (dotProduct) * n.z);
 	}
 }
