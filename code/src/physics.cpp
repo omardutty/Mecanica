@@ -9,17 +9,17 @@
 float posParticula[3 * 10000];//Limite a 10000 particulas
 bool enableGravity = true;
 enum mode{FUENTE,CASCADA};
-glm::vec3 p = { 0.f,8.f,0.f };
+glm::vec3 p = { 1.5f,4.f,1.f };
 float yVelocity = 0;
-glm::vec3 v = { 0.f,yVelocity,0.f };
+glm::vec3 v = { 4.f,-10,0.f };
 glm::vec3 a = { 0.f,-9.81f,0.f };
 int LifeTime = 100;
 int numParticles = 0;
 int particlesToSpawn = 0;
 int maxParticles = 10000;
 glm::vec3 ini = { -5,5,-5 }, end = { -1,5,-5 }, speed = {0,-1,-3};
-glm::vec3 C = { 0,1,0 };
-float SphereRad;
+glm::vec3 C = { 2.f,1.f,1.5f };
+float SphereRad = 2;
 
 namespace LilSpheres {
 	extern const int maxParticles;
@@ -31,7 +31,9 @@ namespace VAR {
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
-	float calculoN(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r);
+	float calculoAlpha(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r);
+	glm::vec3 calculoQ(glm::vec3 P1, glm::vec3 P2, float alpha);
+	float calculoN(glm::vec3 Q, glm::vec3 C);
 	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 }
@@ -58,7 +60,7 @@ public:
 		if (pos.z <= -5 || pos.z >= 5) {
 			vel.z = -vel.z;
 		}
-		if (glm::length(-pos) < 2) {
+		if (sqrt(pow(lastPos.x * C.x, 2) + pow(lastPos.y * C.y, 2) + pow(lastPos.z * C.z, 2)) <= SphereRad) {
 			pos = VAR::pointReboteEsfera(lastPos,pos, C, SphereRad);
 			vel = VAR::velocityReboteEsfera(lastVel, lastPos, pos, C, SphereRad);
 		}
