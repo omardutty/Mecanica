@@ -32,7 +32,7 @@ namespace Capsule {
 	void drawCapsule();
 }
 namespace VAR {
-	glm::vec3 C = { 0,1,0 };
+	glm::vec3 C = { 2,5,1.5 };
 	glm::vec3 e1;
 	glm::vec3 c1 = { 1,1,2 }, c2 = {3,1,0};
 	const glm::vec3 gravity = { 0.f, -9.81f, 0.f };
@@ -1022,7 +1022,7 @@ namespace VAR {
 
 		switch (paret) {
 		case 1:
-			result.x = velocity.x - (1 + grip)*(velocity.y) * 0;
+			result.x = velocity.x  - (1 + grip)*(velocity.y) * 0;
 			result.y = velocity.y - (1 + grip)*(velocity.y) * 1;
 			result.z = velocity.z - (1 + grip)*(velocity.y) * 0;
 			break;
@@ -1048,11 +1048,19 @@ namespace VAR {
 	float distance(glm::vec3 p1, glm::vec3 p2) {
 		return sqrt(pow(p1.x*p2.x, 2) + pow(p1.y*p2.y, 2) + pow(p1.z*p2.z, 2));
 	}
-	float calculoAlpha(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r) {
+
+	float calculoAlpha(glm::vec3 &LastPoint, glm::vec3 &point, glm::vec3 C, float r) {
 		float a;
 		float b;
 		float c;
 		float alpha, alpha2;
+		glm::vec3 P1 = LastPoint;
+		glm::vec3 P2 = point;
+
+	/*	std::cout << "FUNCION ALPHA" << std::endl;
+		std::cout << "P1: x:" << P1.x << " y: " << P1.y << " z: " << P1.z << std::endl;
+		std::cout << "P2: x:" << P2.x << " y: " << P2.y << " z: " << P2.z << std::endl;*/
+
 		a = (pow(P2.x, 2) - 2 * P1.x * P2.x + pow(P1.x, 2)) + (pow(P2.y, 2) - 2 * P1.y * P2.y + pow(P1.y, 2)) + (pow(P2.z, 2) - 2 * P1.z * P2.z + pow(P1.z, 2));
 		b = (2 * P1.x * (P2.x - P1.x) - 2 * (P2.x - P1.x) * C.x) + (2 * P1.y*(P2.y - P1.y) - 2 * (P2.y - P1.y) * C.y) + (2 * P1.z * (P2.z - P1.z) - 2 * (P2.z - P1.z) * C.z);
 		c = pow(P1.x, 2) + pow(P1.y, 2) + pow(P1.z, 2) - 2 * (P1.x*C.x) - 2 * (P1.y*C.y) - 2 * (P1.z*C.z) + pow(C.x, 2) + pow(C.y, 2) + pow(C.z, 2) - pow(r, 2);
@@ -1060,22 +1068,29 @@ namespace VAR {
 
 		/*a = (pow(2.0328, 2) - 2 * 1.8996 * 2.0328 + pow(1.8996, 2)) + (pow(2.6023, 2) - 2 * 2.9683 * 2.6023 + pow(2.9683, 2)) + (pow(1, 2) - 2 * 1 * 1 + pow(1, 2));
 		b = (2 * 1.8996 * (2.0328 - 1.8996) - 2 * (2.0328 - 1.8996) * 2) + (2 * 2.9683*(2.6023 - 2.9683) - 2 * (2.6023 - 2.9683) * 1) + (2 * 1 * (1 - 1) - 2 * (1 - 1) * 1.5);
-		c = pow(1.8996, 2) + pow(2.9683, 2) + pow(1, 2) + (- 2 * (1.8996*2)) + (- 2 * (2.9683 *1)) +  (- 2 * (1*1.5)) + pow(2, 2) + pow(1, 2) + pow(1.5, 2) - 4;
-		*/
+		c = pow(1.8996, 2) + pow(2.9683, 2) + pow(1, 2) + (- 2 * (1.8996*2)) + (- 2 * (2.9683 *1)) +  (- 2 * (1*1.5)) + pow(2, 2) + pow(1, 2) + pow(1.5, 2) - 4;*/
+		
 		//std::cout << c << std::endl;
 
 		alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
-		//std::cout << alpha <<std::endl;
+		//std::cout << "a: "<< alpha <<std::endl;
 		alpha2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
-		//std::cout << alpha2 << std::endl;
+		//std::cout << "a2: " << alpha2 << std::endl;
 
 		if (alpha > alpha2) {
 			return alpha2;
 		}
-		return alpha2;
+		else {
+			return alpha;
+		}
+		
 	}
-	glm::vec3 calculoQ(glm::vec3 P1, glm::vec3 P2, float alpha) {
+	glm::vec3 calculoQ(glm::vec3 &P1, glm::vec3 &P2, float alpha) {
 		glm::vec3 Q;
+
+		/*std::cout << "FUNCION Q" << std::endl;
+		std::cout << "P1: x:" << P1.x << " y: " << P1.y << " z: " << P1.z << std::endl;
+		std::cout << "point: x:" << P2.x << " y: " << P2.y << " z: " << P2.z << std::endl;*/
 
 		float vx, vy, vz;
 		vx = P2.x - P1.x;
@@ -1089,11 +1104,13 @@ namespace VAR {
 		//Q.x = 1.912;
 		//Q.y = 2.934;
 		//Q.z = 1;
-		/*	std::cout << "1-  x:"<< Q.x << " y:" << Q.y <<" z:"<< Q.z  << std::endl;*/
+		//std::cout << "1-  x:"<< Q.x << " y:" << Q.y <<" z:"<< Q.z  << std::endl;
 
 		return Q;
 	}
 	glm::vec3 calculoN(glm::vec3 Q, glm::vec3 C) {
+		/*std::cout << "Q: x:" << Q.x << " y: "<< Q.y << " z: "<<Q.z << std::endl;
+		std::cout << "C: x:" << C.x << " y: " << C.y << " z: " << C.z << std::endl;*/
 		return glm::normalize(Q - C);
 	}
 
@@ -1106,12 +1123,17 @@ namespace VAR {
 		//p5.x = 2.0328;
 		//p5.y = 2.6025;
 		//p5.z = 1;
-
-
+		
+		/*std::cout << "FUNCION REBOTE" << std::endl;
+		std::cout << "lastPoint: x:" << lastPoint.x << " y: " << lastPoint.y << " z: " << lastPoint.z << std::endl;
+		std::cout << "point: x:" << point.x << " y: " << point.y << " z: " << point.z << std::endl;*/
+		
 
 		float alpha = calculoAlpha(lastPoint, point, C, radius);
 		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
 		glm::vec3 n = calculoN(Q, C);
+
+		//std::cout << "n: x: " << n.x << " y: " << n.y<< " z: "<<  n.z<< std::endl;
 
 		/*float alpha = calculoAlpha(lastPoint, point, C, radius);
 		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
@@ -1140,12 +1162,17 @@ namespace VAR {
 		//vel.y = -11.304;
 		//vel.z = 0;
 
+		//std::cout << "x: "<<lastVelocity.x << " y: " << lastVelocity.y << " z: " <<  lastVelocity.z << std::endl;
+
+		
 		float alpha = calculoAlpha(lastPoint, point, C, radius);
 		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
 		glm::vec3 n = calculoN(Q, C);
 
 		float dotProduct = (lastVelocity.x * n.x) + (lastVelocity.y * n.y) + (lastVelocity.z * n.z);
-		std::cout << "dot: " << dotProduct;
+		std::cout << "dot: x:" << lastVelocity.x << " y: " << lastVelocity.y << " z: "<< lastVelocity.z  << std::endl;
+		std::cout << "PLADEURE" << std::endl << std::endl;
+		std::cout << "n: x:" << n.x << " y: " << n.y << " z: " << n.z << std::endl;
 		return glm::vec3(lastVelocity.x -2 * (dotProduct) * n.x, lastVelocity.y - 2 * (dotProduct) * n.y, lastVelocity.z - 2 * (dotProduct) * n.z);
 	}
 }
