@@ -8,7 +8,7 @@
 
 float posParticula[3 * 10000];//Limite a 10000 particulas
 bool enableGravity = true;
-enum mode{FUENTE,CASCADA};
+int Mode = 0;
 glm::vec3 p = { 1.5f,4.f,1.f };
 float yVelocity = 0;
 glm::vec3 v = { 4.f,-10,0.f };
@@ -29,9 +29,9 @@ namespace LilSpheres {
 }
 namespace VAR {
 	
-	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate);
+	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate,float elasticity);
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
-	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
+	glm::vec3 rebotePared(glm::vec3 pos,glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
 	float calculoAlpha(glm::vec3 &P1, glm::vec3 &P2, glm::vec3 C, float r);
 	glm::vec3 calculoQ(glm::vec3 &P1, glm::vec3 &P2, float alpha);
@@ -44,21 +44,43 @@ class Particle {
 public:
 	glm::vec3 pos, lastPos;
 	glm::vec3 vel,lastVel;
-	mode tipo = mode::FUENTE;
+	int tipo = Mode;
 	float lifeTime;
 	void Update() {
 		lastPos = pos;
 		lastVel = vel;
 		lifeTime--;
+
+		pos = VAR::nextPoint(pos, vel, 0.0333, coeficienteE);
 		
-		if (pos.x < -5 || pos.x > 5 || pos.y < 0 || pos.y > 10 || pos.z < -5 || pos.z > 5) {
-			pos = VAR::nextPoint(pos, vel, 0.0333);
-			vel.y = 0;
-			vel = VAR::rebotePared(lastPos,vel,coeficienteR);
+		if (pos.x <= -5) {
+			vel.x = VAR::rebotePared(pos,vel, coeficienteR).x;
+		}
+		else if (pos.x >= 5) {
+			vel.x = VAR::rebotePared(pos, vel, coeficienteR).x;
 		}
 		else {
-			pos = VAR::nextPoint(pos, vel, 0.0333);
-			vel = VAR::nextVelocity(lastVel, a, 0.0333);
+			vel.x = VAR::nextVelocity(lastVel, a, 0.0333).x;
+		}
+
+		if (pos.y <= 0) {
+			vel.y = VAR::rebotePared(pos, vel, coeficienteR).y;
+		}
+		else if (pos.y >= 10) {
+			vel.y = VAR::rebotePared(pos, vel, coeficienteR).y;
+		}
+		else {
+			vel.y = VAR::nextVelocity(lastVel, a, 0.0333).y;
+		}
+
+		if (pos.z <= -5) {
+			vel.z = VAR::rebotePared(pos, vel, coeficienteR).z;
+		}
+		else if (pos.z >= 5) {
+			vel.z = VAR::rebotePared(pos, vel, coeficienteR).z;
+		}
+		else {
+			vel.z = VAR::nextVelocity(lastVel, a, 0.0333).z;
 		}
 
 		if (sqrt(pow(lastPos.x * C.x, 2) + pow(lastPos.y * C.y, 2) + pow(lastPos.z * C.z, 2)) < SphereRad) {
@@ -72,13 +94,15 @@ public:
 	
 	Particle() {
 		
-		if(tipo == mode::FUENTE){
+		if(tipo == 0){
 			pos = p;
 			vel = glm::vec3((rand() % (30 + 30 + 1) - 30)*.1f, yVelocity, (rand() % (30 + 30 + 1) - 30)*.1f);
 			//vel = v;
 		}
-		/*else if (tipo == mode::CASCADA) {
-			glm::vec3 spawnVector(end.x - ini.x, end.y - ini.y, end.z - ini.z);
+		else if (tipo == 1) {
+			pos = p;
+			vel = glm::vec3(0,yVelocity,1);
+			/*glm::vec3 spawnVector(end.x - ini.x, end.y - ini.y, end.z - ini.z);
 			float vectorModule = glm::distance(ini, end);
 			float distBTparicles = vectorModule / 100;
 			pos = glm::vec3(distBTparicles*spawnVector.x + ini, distBTparicles*spawnVector.y + ini, distBTparicles*spawnVector.z + ini);
@@ -89,8 +113,8 @@ public:
 				distBTparicles *= 2;
 			}
 
-			vel = speed;
-		}*/
+			vel = speed;*/
+		}
 		lifeTime = LifeTime;
 	}
 	~Particle() {}
@@ -100,10 +124,21 @@ std::deque<Particle*>particles;
 Particle* p1;
 
 void spawnParticles(int maxParticles) {
-	if (particles.size() < maxParticles) {
-		p1 = new Particle();
-		particles.push_back(p1);
-		numParticles++;
+	if (maxParticles < LifeTime) {
+		if (particles.size() < maxParticles) {
+			p1 = new Particle();
+			particles.push_back(p1);
+			numParticles = particles.size();
+		}
+	}
+	else {
+		if (particles.size() < maxParticles) {
+			for (int i = 0; i < maxParticles / LifeTime; i++) {
+				p1 = new Particle();
+				particles.push_back(p1);
+				numParticles = particles.size();
+			}
+		}
 	}
 }
 
@@ -118,6 +153,8 @@ void GUI() {
 		ImGui::Checkbox("Gravity", &enableGravity);
 		ImGui::InputFloat("Elasticidad", &coeficienteE);
 		ImGui::InputFloat("Rozamiento", &coeficienteR);
+		ImGui::RadioButton("Fuente", &Mode,0); ImGui::SameLine();
+		ImGui::RadioButton("Cascada", &Mode,1);
 		ImGui::Text("Fuente: ");
 		ImGui::InputInt("Num Particles", &particlesToSpawn);
 		ImGui::InputInt("LifeTime", &LifeTime);
@@ -149,12 +186,12 @@ void PhysicsUpdate(float dt) {
 	// ...........................
 	//p1 = new Particle();
 	//particles.push_back(p1);
+	std::cout << numParticles << std::endl;
 	if (enableGravity) {
 		a = { 0,-9.81,0 };
 	}
 	else {
 		a = { 0,0,0 };
-		std::cout << "DISABLED";
 	}
 
 	spawnParticles(particlesToSpawn);
@@ -166,7 +203,7 @@ void PhysicsUpdate(float dt) {
 		for (Particle* p1 : particles) {
 			if (p1->lifeTime <= 0) {
 				particles.pop_front();
-				numParticles--;
+				numParticles = particles.size();
 			}
 			p1->Update();
 			posParticula[i] = p1->pos.x;
@@ -177,7 +214,7 @@ void PhysicsUpdate(float dt) {
 
 	}
 
-	LilSpheres::updateParticles(0, maxParticles, posParticula);
+	LilSpheres::updateParticles(0, particles.size(), posParticula);
 }
 
 void PhysicsCleanup() {

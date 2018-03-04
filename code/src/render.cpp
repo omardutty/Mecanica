@@ -37,7 +37,7 @@ namespace VAR {
 	glm::vec3 c1 = { 1,1,2 }, c2 = {3,1,0};
 	const glm::vec3 gravity = { 0.f, -9.81f, 0.f };
 	float SphereRad = 1, CapusleRad = 1;
-	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate);
+	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate, float elasticity);
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
@@ -992,7 +992,7 @@ void main() {\n\
 ///////////////////////////////////////////////// Variables
 namespace VAR {
 
-	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate) {
+	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate, float elasticity) {
 		return last + frameRate * velocity;
 	}
 
@@ -1016,30 +1016,46 @@ namespace VAR {
 		else if (lastPoint.x >= 5) {
 			paret = 4;
 		}
+		else if (lastPoint.z <= -5) {
+			paret = 5;
+		}
+		else if (lastPoint.z >= 5) {
+			paret = 6;
+		}
 		else {
 			paret = 0;
 		}
 
 		switch (paret) {
 		case 1:
-			result.x = velocity.x  - (1 + grip)*(velocity.y) * 0;
-			result.y = velocity.y - (1 + grip)*(velocity.y) * 1;
-			result.z = velocity.z - (1 + grip)*(velocity.y) * 0;
+			result.x = velocity.x;
+			result.y = -velocity.y*grip;
+			result.z = velocity.z;
 			break;
 		case 2:
-			result.x = velocity.x - (1 + grip)*(velocity.y) * 0;
-			result.y = velocity.y - (1 + grip)*(velocity.y) * -1;
-			result.z = velocity.z - (1 + grip)*(velocity.y) * 0;
+			result.x = velocity.x;
+			result.y = -velocity.y*grip;
+			result.z = velocity.z;
 			break;
 		case 3:
-			result.x = velocity.x - (1 + grip)*(velocity.x) * 1;
-			result.y = velocity.y - (1 + grip)*(velocity.x) * 0;
-			result.z = velocity.z - (1 + grip)*(velocity.x) * 0;
+			result.x = -velocity.x*grip;
+			result.y = velocity.y;
+			result.z = velocity.z;
 			break;
 		case 4:
-			result.x = velocity.x - (1 + grip)*(velocity.x) * -1;
-			result.y = velocity.y - (1 + grip)*(velocity.x) * 0;
-			result.z = velocity.z - (1 + grip)*(velocity.x) * 0;
+			result.x = -velocity.x*grip;
+			result.y = velocity.y;
+			result.z = velocity.z;
+			break;
+		case 5:
+			result.x = velocity.x;
+			result.y = velocity.y;
+			result.z = -velocity.z*grip;
+			break;
+		case 6:
+			result.x = velocity.x;
+			result.y = velocity.y;
+			result.z = -velocity.z*grip;
 			break;
 		}
 		return result;
