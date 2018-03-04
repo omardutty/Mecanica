@@ -993,11 +993,19 @@ void main() {\n\
 namespace VAR {
 
 	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate, float elasticity) {
-		return last + frameRate * velocity;
+		glm::vec3 aux;
+		aux.x = last.x + frameRate * velocity.x;
+		aux.y = last.y + frameRate * velocity.y;
+		aux.z = last.z + frameRate * velocity.z;
+		return aux;
 	}
 
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate) {
-		return lastVelocity + frameRate * acceleration;
+		glm::vec3 aux;
+		aux.x = lastVelocity.x + frameRate * acceleration.x;
+		aux.y = lastVelocity.y + frameRate * acceleration.y;
+		aux.z = lastVelocity.z + frameRate * acceleration.z;
+		return aux;
 	}
 
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip) {
@@ -1073,19 +1081,10 @@ namespace VAR {
 		glm::vec3 P1 = LastPoint;
 		glm::vec3 P2 = point;
 
-	/*	std::cout << "FUNCION ALPHA" << std::endl;
-		std::cout << "P1: x:" << P1.x << " y: " << P1.y << " z: " << P1.z << std::endl;
-		std::cout << "P2: x:" << P2.x << " y: " << P2.y << " z: " << P2.z << std::endl;*/
-
 		a = (pow(P2.x, 2) - 2 * P1.x * P2.x + pow(P1.x, 2)) + (pow(P2.y, 2) - 2 * P1.y * P2.y + pow(P1.y, 2)) + (pow(P2.z, 2) - 2 * P1.z * P2.z + pow(P1.z, 2));
 		b = (2 * P1.x * (P2.x - P1.x) - 2 * (P2.x - P1.x) * C.x) + (2 * P1.y*(P2.y - P1.y) - 2 * (P2.y - P1.y) * C.y) + (2 * P1.z * (P2.z - P1.z) - 2 * (P2.z - P1.z) * C.z);
 		c = pow(P1.x, 2) + pow(P1.y, 2) + pow(P1.z, 2) - 2 * (P1.x*C.x) - 2 * (P1.y*C.y) - 2 * (P1.z*C.z) + pow(C.x, 2) + pow(C.y, 2) + pow(C.z, 2) - pow(r, 2);
 
-
-		/*a = (pow(2.0328, 2) - 2 * 1.8996 * 2.0328 + pow(1.8996, 2)) + (pow(2.6023, 2) - 2 * 2.9683 * 2.6023 + pow(2.9683, 2)) + (pow(1, 2) - 2 * 1 * 1 + pow(1, 2));
-		b = (2 * 1.8996 * (2.0328 - 1.8996) - 2 * (2.0328 - 1.8996) * 2) + (2 * 2.9683*(2.6023 - 2.9683) - 2 * (2.6023 - 2.9683) * 1) + (2 * 1 * (1 - 1) - 2 * (1 - 1) * 1.5);
-		c = pow(1.8996, 2) + pow(2.9683, 2) + pow(1, 2) + (- 2 * (1.8996*2)) + (- 2 * (2.9683 *1)) +  (- 2 * (1*1.5)) + pow(2, 2) + pow(1, 2) + pow(1.5, 2) - 4;*/
-		
 		//std::cout << c << std::endl;
 
 		alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
@@ -1104,10 +1103,6 @@ namespace VAR {
 	glm::vec3 calculoQ(glm::vec3 &P1, glm::vec3 &P2, float alpha) {
 		glm::vec3 Q;
 
-		/*std::cout << "FUNCION Q" << std::endl;
-		std::cout << "P1: x:" << P1.x << " y: " << P1.y << " z: " << P1.z << std::endl;
-		std::cout << "point: x:" << P2.x << " y: " << P2.y << " z: " << P2.z << std::endl;*/
-
 		float vx, vy, vz;
 		vx = P2.x - P1.x;
 		vy = P2.y - P1.y;
@@ -1117,9 +1112,6 @@ namespace VAR {
 		Q.y = P1.y + (vy)*alpha;
 		Q.z = P1.z + (vz)*alpha;
 
-		//Q.x = 1.912;
-		//Q.y = 2.934;
-		//Q.z = 1;
 		//std::cout << "1-  x:"<< Q.x << " y:" << Q.y <<" z:"<< Q.z  << std::endl;
 
 		return Q;
@@ -1131,29 +1123,10 @@ namespace VAR {
 	}
 
 	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius) {
-		//glm::vec3 p4; glm::vec3 p5;
-		//p4.x = 1.8996;
-		//p4.y = 2.9683;
-		//p4.z = 1;
-
-		//p5.x = 2.0328;
-		//p5.y = 2.6025;
-		//p5.z = 1;
-		
-		/*std::cout << "FUNCION REBOTE" << std::endl;
-		std::cout << "lastPoint: x:" << lastPoint.x << " y: " << lastPoint.y << " z: " << lastPoint.z << std::endl;
-		std::cout << "point: x:" << point.x << " y: " << point.y << " z: " << point.z << std::endl;*/
-		
-
+	
 		float alpha = calculoAlpha(lastPoint, point, C, radius);
 		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
 		glm::vec3 n = calculoN(Q, C);
-
-		//std::cout << "n: x: " << n.x << " y: " << n.y<< " z: "<<  n.z<< std::endl;
-
-		/*float alpha = calculoAlpha(lastPoint, point, C, radius);
-		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
-		glm::vec3 n = calculoN(Q, C);*/
 
 		float d = -((n.x * Q.x) + (n.y * Q.y) + (n.z * Q.z));
 
@@ -1163,32 +1136,13 @@ namespace VAR {
 	}
 
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint,glm::vec3 point, glm::vec3 C, float radius) {
-
-		//glm::vec3 p4; glm::vec3 p5;
-		//p4.x = 1.8996;
-		//p4.y = 2.9683;
-		//p4.z = 1;
-
-		//p5.x = 2.0328;
-		//p5.y = 2.6025;
-		//p5.z = 1;
-
-		//glm::vec3 vel;
-		//vel.x = 4;
-		//vel.y = -11.304;
-		//vel.z = 0;
-
-		//std::cout << "x: "<<lastVelocity.x << " y: " << lastVelocity.y << " z: " <<  lastVelocity.z << std::endl;
-
 		
 		float alpha = calculoAlpha(lastPoint, point, C, radius);
 		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
 		glm::vec3 n = calculoN(Q, C);
 
 		float dotProduct = (lastVelocity.x * n.x) + (lastVelocity.y * n.y) + (lastVelocity.z * n.z);
-		std::cout << "dot: x:" << lastVelocity.x << " y: " << lastVelocity.y << " z: "<< lastVelocity.z  << std::endl;
-		std::cout << "PLADEURE" << std::endl << std::endl;
-		std::cout << "n: x:" << n.x << " y: " << n.y << " z: " << n.z << std::endl;
+		std::cout << lastVelocity.x << " "<<lastVelocity.y <<" " <<lastVelocity.z<< std::endl;
 		return glm::vec3(lastVelocity.x -2 * (dotProduct) * n.x, lastVelocity.y - 2 * (dotProduct) * n.y, lastVelocity.z - 2 * (dotProduct) * n.z);
 	}
 }
