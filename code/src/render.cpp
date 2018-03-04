@@ -120,7 +120,7 @@ void GLinit(int width, int height) {
 	Axis::setupAxis();
 	setupPrims();
 	Sphere::setupSphere(VAR::C,VAR::SphereRad);
-	//Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
+	Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
 }
 
 void GLcleanup() {
@@ -128,7 +128,7 @@ void GLcleanup() {
 	Axis::cleanupAxis();
 	cleanupPrims();
 	Sphere::cleanupSphere();
-	//Capsule::cleanupCapsule();
+	Capsule::cleanupCapsule();
 }
 
 void GLrender() {
@@ -145,7 +145,7 @@ void GLrender() {
 	Box::drawCube();
 	Axis::drawAxis();
 	Sphere::drawSphere();
-	//Capsule::drawCapsule();
+	Capsule::drawCapsule();
 	renderPrims();
 
 	ImGui::Render();

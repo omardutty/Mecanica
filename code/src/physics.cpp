@@ -110,28 +110,14 @@ public:
 		if (tipo == 0) {
 			pos = p;
 			vel = glm::vec3((rand() % (30 + 30 + 1) - 30)*.1f, yVelocity, (rand() % (30 + 30 + 1) - 30)*.1f);
-			//vel = v;
+			
 		}
 		else if (tipo == 1) {
-			//	pos = p;
-			//	vel = glm::vec3(0,yVelocity,1);
-			//	glm::vec3 spawnVector(end.x - ini.x, end.y - ini.y, end.z - ini.z);
-			//	float vectorModule = glm::distance(ini, end);
-			//	float distBTparicles = vectorModule / 100;
-			//	pos = glm::vec3(distBTparicles*spawnVector.x + ini, distBTparicles*spawnVector.y + ini, distBTparicles*spawnVector.z + ini);
-			//	if (distBTparicles >= vectorModule * 100) {
-			//		distBTparicles = vectorModule / 100;
-			//	}
-			//	else {
-			//		distBTparicles *= 2;
-			//	}
-			//	vel = speed;
-			//}
 			
 			pos = cascadaP1;
 			vel = cascadaVel;
 		}
-		//vel = speed;
+		
 		lifeTime = LifeTime;
 	}
 	~Particle() {}
@@ -231,7 +217,7 @@ void spawnParticles(int maxParticles) {
 	}
 }
 
-bool show_test_window = true;
+bool show_test_window = false;
 void GUI() {
 	bool show = true;
 	ImGui::Begin("Physics Parameters", &show, 0);
