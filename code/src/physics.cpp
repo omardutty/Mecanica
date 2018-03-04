@@ -18,8 +18,10 @@ int numParticles = 0;
 int particlesToSpawn = 0;
 int maxParticles = 10000;
 glm::vec3 ini = { -5,5,-5 }, end = { -1,5,-5 }, speed = {0,-1,-3};
-glm::vec3 C = { 2.f,1.f,1.5f };
-float SphereRad = 2;
+glm::vec3 C = { 2.f,5.f,1.5f };
+float SphereRad = 1;
+float coeficienteR = 1;
+float coeficienteE = 1;
 
 namespace LilSpheres {
 	extern const int maxParticles;
@@ -31,8 +33,8 @@ namespace VAR {
 	glm::vec3 nextVelocity(glm::vec3 lastVelocity, glm::vec3 acceleration, float frameRate);
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
-	float calculoAlpha(glm::vec3 P1, glm::vec3 P2, glm::vec3 C, float r);
-	glm::vec3 calculoQ(glm::vec3 P1, glm::vec3 P2, float alpha);
+	float calculoAlpha(glm::vec3 &P1, glm::vec3 &P2, glm::vec3 C, float r);
+	glm::vec3 calculoQ(glm::vec3 &P1, glm::vec3 &P2, float alpha);
 	float calculoN(glm::vec3 Q, glm::vec3 C);
 	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
@@ -46,23 +48,25 @@ public:
 	float lifeTime;
 	void Update() {
 		lastPos = pos;
-		pos = VAR::nextPoint(pos, vel, 0.0333);
 		lastVel = vel;
-		vel = VAR::nextVelocity(vel, a, 0.0333);
 		lifeTime--;
-		if (pos.y <= 0 || pos.y >= 10) {
-			vel.y -= 1.6*vel.y;
+		
+		if (pos.x < -5 || pos.x > 5 || pos.y < 0 || pos.y > 10 || pos.z < -5 || pos.z > 5) {
+			pos = VAR::nextPoint(pos, vel, 0.0333);
+			vel.y = 0;
+			vel = VAR::rebotePared(lastPos,vel,coeficienteR);
+		}
+		else {
+			pos = VAR::nextPoint(pos, vel, 0.0333);
+			vel = VAR::nextVelocity(lastVel, a, 0.0333);
+		}
 
-		}
-		if (pos.x <= -5 || pos.x >= 5) {
-			vel.x = -vel.x;
-		}
-		if (pos.z <= -5 || pos.z >= 5) {
-			vel.z = -vel.z;
-		}
-		if (sqrt(pow(lastPos.x * C.x, 2) + pow(lastPos.y * C.y, 2) + pow(lastPos.z * C.z, 2)) <= SphereRad) {
+		if (sqrt(pow(lastPos.x * C.x, 2) + pow(lastPos.y * C.y, 2) + pow(lastPos.z * C.z, 2)) < SphereRad) {
+			std::cout << "CHUNCHUNMARU" << std::endl;
 			pos = VAR::pointReboteEsfera(lastPos,pos, C, SphereRad);
 			vel = VAR::velocityReboteEsfera(lastVel, lastPos, pos, C, SphereRad);
+		/*	std::cout << "vel: x:" << vel.x << " y: " << vel.y << " z: " << vel.z << std::endl;
+			std::cout << "lastVel: x:" << lastVel.x << " y: " << lastVel.y << " z: " << lastVel.z << std::endl;*/
 		}
 	}
 	
@@ -96,7 +100,7 @@ std::deque<Particle*>particles;
 Particle* p1;
 
 void spawnParticles(int maxParticles) {
-	if (particles.size() < maxParticles*10) {
+	if (particles.size() < maxParticles) {
 		p1 = new Particle();
 		particles.push_back(p1);
 		numParticles++;
@@ -112,6 +116,8 @@ void GUI() {
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		ImGui::Checkbox("Gravity", &enableGravity);
+		ImGui::InputFloat("Elasticidad", &coeficienteE);
+		ImGui::InputFloat("Rozamiento", &coeficienteR);
 		ImGui::Text("Fuente: ");
 		ImGui::InputInt("Num Particles", &particlesToSpawn);
 		ImGui::InputInt("LifeTime", &LifeTime);
@@ -138,6 +144,7 @@ void PhysicsInit() {
 }
 
 void PhysicsUpdate(float dt) {
+	//srand(time(NULL));
 	// Do your update code here...
 	// ...........................
 	//p1 = new Particle();
@@ -151,7 +158,7 @@ void PhysicsUpdate(float dt) {
 	}
 
 	spawnParticles(particlesToSpawn);
-	std::cout << numParticles << std::endl;
+	//std::cout << numParticles << std::endl;
 	
 	//Llenar array de la gpu
 	int i = 0;
