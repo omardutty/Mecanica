@@ -40,14 +40,16 @@ namespace VAR {
 	float calculoAlpha(glm::vec3 &P1, glm::vec3 &P2, glm::vec3 C, float r);
 	glm::vec3 calculoQ(glm::vec3 &P1, glm::vec3 &P2, float alpha);
 	glm::vec3 calculoN(glm::vec3 Q, glm::vec3 C);
-	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
-	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
+	glm::vec3 pointReboteEsfera(glm::vec3 point, glm::vec3 n, glm::vec3 Q);
+	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 n);
 }
 
 class Particle {
 public:
 	glm::vec3 pos, lastPos;
 	glm::vec3 vel,lastVel;
+	glm::vec3 Q, n;
+	float alpha;
 	int tipo = Mode;
 	float lifeTime;
 	void Update() {
@@ -88,13 +90,23 @@ public:
 		}
 
 		if (sqrt(pow(lastPos.x * C.x, 2) + pow(lastPos.y * C.y, 2) + pow(lastPos.z * C.z, 2)) < SphereRad) {
-			pos = VAR::pointReboteEsfera(lastPos,pos, C, SphereRad);
-			vel = VAR::velocityReboteEsfera(lastVel, lastPos, pos, C, SphereRad);
+			
+			alpha = VAR::calculoAlpha(lastPos,pos,C,SphereRad);
+			std::cout << "aplha:" << alpha << std::endl;
+			Q = VAR::calculoQ(lastPos, pos, alpha);
+			std::cout << "Qx: " << Q.x << " y:" << Q.y << " z: " << Q.z << std::endl;
+			n = VAR::calculoN(Q, C);
+			std::cout << "nx: " << n.x << " y:" << n.y << " z: " << n.z << std::endl;
+
+			pos = VAR::pointReboteEsfera(pos,n,Q);
+			vel = VAR::velocityReboteEsfera(lastVel,n);
 		}
 	}
 	
 	Particle() {
-
+		alpha = 0;
+		Q = { 0.f,0.f,0.f };
+		n = { 0.f,0.f,0.f };
 		if (tipo == 0) {
 			pos = p;
 			vel = glm::vec3((rand() % (30 + 30 + 1) - 30)*.1f, yVelocity, (rand() % (30 + 30 + 1) - 30)*.1f);
@@ -130,11 +142,11 @@ Particle* p1;
 int i = 0;
 int j = 0;
 void spawnParticles(int maxParticles) {
-	if(cascadaP1.x > 5){
-		cascadaP1.x = 5;
+	if(cascadaP1.x > 10){
+		cascadaP1.x = 10;
 	}
-	if (cascadaP2.x > 5) {
-		cascadaP2.x = 5;
+	if (cascadaP2.x > 10) {
+		cascadaP2.x = 10;
 	}
 	if (maxParticles < LifeTime) {
 		if (particles.size() < maxParticles) {

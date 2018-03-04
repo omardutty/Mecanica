@@ -42,8 +42,8 @@ namespace VAR {
 	glm::vec3 rebotePared(glm::vec3 lastPoint, glm::vec3 velocity, float grip);
 	float distance(glm::vec3 p1, glm::vec3 p2);
 	glm::vec3 calculoN(glm::vec3 Q, glm::vec3 C);
-	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
-	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius);
+	glm::vec3 pointReboteEsfera(glm::vec3 point, glm::vec3 n, glm::vec3 Q);
+	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 n);
 }
 extern void setupPrims();
 extern void renderPrims();
@@ -1086,10 +1086,22 @@ namespace VAR {
 		c = pow(P1.x, 2) + pow(P1.y, 2) + pow(P1.z, 2) - 2 * (P1.x*C.x) - 2 * (P1.y*C.y) - 2 * (P1.z*C.z) + pow(C.x, 2) + pow(C.y, 2) + pow(C.z, 2) - pow(r, 2);
 
 		//std::cout << c << std::endl;
+		if ((pow(b, 2) - 4 * a*c) < 0)
+		{
+			alpha=alpha2 = 0.5;
+			
+		}
+		else {
+			alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
+			alpha2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
 
-		alpha = (-b + sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
+		}
+		std::cout << "a: " << a << " b:" << b << " c " << c << std::endl;
+		
+		
 		//std::cout << "a: "<< alpha <<std::endl;
-		alpha2 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / (2 * a);
+		
+		
 		//std::cout << "a2: " << alpha2 << std::endl;
 
 		if (alpha > alpha2) {
@@ -1122,12 +1134,9 @@ namespace VAR {
 		return glm::normalize(Q - C);
 	}
 
-	glm::vec3 pointReboteEsfera(glm::vec3 lastPoint, glm::vec3 point, glm::vec3 C, float radius) {
+	glm::vec3 pointReboteEsfera( glm::vec3 point, glm::vec3 n, glm::vec3 Q) {
 	
-		float alpha = calculoAlpha(lastPoint, point, C, radius);
-		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
-		glm::vec3 n = calculoN(Q, C);
-
+		
 		float d = -((n.x * Q.x) + (n.y * Q.y) + (n.z * Q.z));
 
 		float dotProuct = (point.x * n.x) + (point.y * n.y) + (point.z * n.z);
@@ -1135,11 +1144,9 @@ namespace VAR {
 		return glm::vec3((point.x - 2 * (dotProuct + d)*n.x), (point.y - 2 * (dotProuct + d)*n.y), (point.z - 2 * (dotProuct + d)*n.z));
 	}
 
-	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 lastPoint,glm::vec3 point, glm::vec3 C, float radius) {
+	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity,  glm::vec3 n) {
 		
-		float alpha = calculoAlpha(lastPoint, point, C, radius);
-		glm::vec3 Q = calculoQ(lastPoint, point, alpha);
-		glm::vec3 n = calculoN(Q, C);
+		
 
 		float dotProduct = (lastVelocity.x * n.x) + (lastVelocity.y * n.y) + (lastVelocity.z * n.z);
 		std::cout << lastVelocity.x << " "<<lastVelocity.y <<" " <<lastVelocity.z<< std::endl;
