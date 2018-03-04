@@ -152,11 +152,38 @@ void spawnParticles(int maxParticles) {
 		if (particles.size() < maxParticles) {
 			p1 = new Particle();
 			if (Mode == 1) {
-				p1->pos.x += i;
-				i += 0.1f;
-				if (p1->pos.x + i > cascadaP2.x) {
-					i = 0;
+				if (cascadaP1.x == cascadaP2.x) {
+					p1->pos.x = cascadaP1.x;
 				}
+				else if (cascadaP1.x < cascadaP2.x) {
+
+					p1->pos.x =cascadaP1.x + rand() % abs((int)cascadaP2.x - (int)cascadaP1.x);
+				}
+				
+				else {
+					p1->pos.x = cascadaP2.x + rand() % abs((int)cascadaP2.x - (int)cascadaP1.x);
+				}
+				if (cascadaP1.y == cascadaP2.y) {
+					p1->pos.y = cascadaP1.y;
+				}
+				else if (cascadaP1.y < cascadaP2.y) {
+					p1->pos.y = cascadaP1.y + rand() % abs((int)cascadaP2.y - (int)cascadaP1.y);
+				}
+				else {
+					p1->pos.y = cascadaP2.y + rand() % abs((int)cascadaP2.y - (int)cascadaP1.y);
+				}
+				if (cascadaP1.z == cascadaP2.z) {
+					p1->pos.z = cascadaP1.z;
+				}
+				else if (cascadaP1.z < cascadaP2.z) {
+					p1->pos.z = cascadaP1.z + rand() % abs((int)cascadaP2.z - (int)cascadaP1.z);
+				}
+				else {
+					p1->pos.z = cascadaP2.z + rand() % abs((int)cascadaP2.z - (int)cascadaP1.z);
+				}
+				
+				
+				
 			}
 			particles.push_back(p1);
 			numParticles = particles.size();
@@ -167,10 +194,34 @@ void spawnParticles(int maxParticles) {
 			for (int i = 0; i < maxParticles / LifeTime; i++) {
 				p1 = new Particle();
 				if (Mode == 1) {
-					p1->pos.x += j ;
-					j ++;
-					if (p1->pos.x + j > cascadaP2.x) {
-						j = 0;
+					if (cascadaP1.x == cascadaP2.x) {
+						p1->pos.x = cascadaP1.x;
+					}
+					else if (cascadaP1.x < cascadaP2.x) {
+
+						p1->pos.x = cascadaP1.x + rand() % abs((int)cascadaP2.x - (int)cascadaP1.x);
+					}
+
+					else {
+						p1->pos.x = cascadaP2.x + rand() % abs((int)cascadaP2.x - (int)cascadaP1.x);
+					}
+					if (cascadaP1.y == cascadaP2.y) {
+						p1->pos.y = cascadaP1.y;
+					}
+					else if (cascadaP1.y < cascadaP2.y) {
+						p1->pos.y = cascadaP1.y + rand() % abs((int)cascadaP2.y - (int)cascadaP1.y);
+					}
+					else {
+						p1->pos.y = cascadaP2.y + rand() % abs((int)cascadaP2.y - (int)cascadaP1.y);
+					}
+					if (cascadaP1.z == cascadaP2.z) {
+						p1->pos.z = cascadaP1.z;
+					}
+					else if (cascadaP1.z < cascadaP2.z) {
+						p1->pos.z = cascadaP1.z + rand() % abs((int)cascadaP2.z - (int)cascadaP1.z);
+					}
+					else {
+						p1->pos.z = cascadaP2.z + rand() % abs((int)cascadaP2.z - (int)cascadaP1.z);
 					}
 				}
 				particles.push_back(p1);
