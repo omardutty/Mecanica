@@ -5,7 +5,7 @@
 #include <deque>
 #include<iostream>
 #include<time.h>
-
+/*
 float posParticula[3 * 10000];//Limite a 10000 particulas
 bool enableGravity = true;
 int Mode = 0;
@@ -25,12 +25,47 @@ float coeficienteE = 1;
 glm::vec3 cascadaP1 = {-2.f,4.f,0.f};
 glm::vec3 cascadaP2 = { 2.f,4.f,0.f };
 glm::vec3 cascadaVel = {0.f,1.f,1.f};
+*/
 
+
+float arr[252 * 3];
+float x = -4;
+float z = -4;
+
+
+bool gravityFake = false;
 
 namespace LilSpheres {
 	extern const int maxParticles;
 	extern void updateParticles(int startIdx, int count, float* array_data);
 }
+namespace ClothMesh {
+	void updateClothMesh(float *array_data);
+}
+
+class Particle{
+public:
+	glm::vec3 pos, lastPos;
+	glm::vec3 vel, lastVel;
+	glm::vec3 FR;
+	Particle();
+	glm::vec3 springForce(glm::vec3 P1, glm::vec3 P2, glm::vec3 v1, glm::vec3 v2, float lenght, const float Ke, const float Kd);
+	static glm::vec3 VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, float time);
+	~Particle();
+};
+
+std::deque<Particle*> malla;
+
+Particle::Particle() {
+	lastPos = pos;
+	lastVel = vel;
+}
+
+glm::vec3 Particle::VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, float time) {
+	return (pos + (pos - lastPos) + F*pow(time, 2));
+}
+
+/*
 namespace VAR {
 	
 	glm::vec3 nextPoint(glm::vec3 last, glm::vec3 velocity, float frameRate,float elasticity);
@@ -216,28 +251,30 @@ void spawnParticles(int maxParticles) {
 		}
 	}
 }
-
+*/
 bool show_test_window = false;
 void GUI() {
 	bool show = true;
 	ImGui::Begin("Physics Parameters", &show, 0);
-
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 	// Do your GUI code here....
 	{
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-		ImGui::Checkbox("Gravity", &enableGravity);
-		ImGui::InputFloat("Rozamiento", &coeficienteR);
-		ImGui::RadioButton("Fuente", &Mode,0); ImGui::SameLine();
-		ImGui::RadioButton("Cascada", &Mode,1);
-		ImGui::InputInt("Num Particles", &particlesToSpawn);
-		ImGui::InputInt("LifeTime", &LifeTime);
-		ImGui::Text("Fuente: ");
-		ImGui::InputFloat3("SpawnPoint", &p.x);
-		ImGui::InputFloat("Y Velocity", &yVelocity);
-		ImGui::Text("Cascada: ");
-		ImGui::InputFloat3("P1", &cascadaP1.x);
-		ImGui::InputFloat3("P2", &cascadaP2.x);
-		ImGui::InputFloat3("Velocity", &cascadaVel.x);
+		/*
+		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
+		//ImGui::Checkbox("Gravity", &enableGravity);
+		//ImGui::InputFloat("Rozamiento", &coeficienteR);
+		//ImGui::RadioButton("Fuente", &Mode,0); ImGui::SameLine();
+		//ImGui::RadioButton("Cascada", &Mode,1);
+		//ImGui::InputInt("Num Particles", &particlesToSpawn);
+		//ImGui::InputInt("LifeTime", &LifeTime);
+		//ImGui::Text("Fuente: ");
+		//ImGui::InputFloat3("SpawnPoint", &p.x);
+		//ImGui::InputFloat("Y Velocity", &yVelocity);
+		//ImGui::Text("Cascada: ");
+		//ImGui::InputFloat3("P1", &cascadaP1.x);
+		//ImGui::InputFloat3("P2", &cascadaP2.x);
+		//ImGui::InputFloat3("Velocity", &cascadaVel.x);*/
+		ImGui::Checkbox("Gravity", &gravityFake);
 
 
 	}
@@ -253,19 +290,46 @@ void GUI() {
 	}
 }
 
+glm::vec3 Particle::springForce(glm::vec3 P1, glm::vec3 P2, glm::vec3 v1, glm::vec3 v2, float lenght, const float Ke, const float Kd) {
+	return -(Ke*(glm::length(P1 - P2)) - lenght) + Kd*(v1 - v2)*((P1 - P2) / glm::length(P1 - P2))*((P1 - P2) / glm::length(P1 - P2));
+}
+
+bool control = false;
 void PhysicsInit() {
 	// Do your initialization code here...
 	// ...................................
 	srand(time(NULL));
+	
+	
+	for (int i = 0; i < 252*3; i++) {
+		Particle* p1 = new Particle();
+		if (i % 14 == 0 && i!= 0) {
+			x += 0.5;
+			z = -4;
+		}
+		/*arr[i] = x+0.5;
+		arr[i + 1] = 10;
+		arr[i + 2] = z+0.5;*/
+
+		p1->pos.x   = p1->lastPos.x = arr[i] = x+0.5;
+		p1->pos.y  = p1->lastPos.y  = arr[i + 1] = 10;
+		p1->pos.z  = p1->lastPos.z = arr[i + 2] = z+0.5;
+		p1->vel.x = p1->vel.y = p1->vel.z = 0;
+		p1->lastVel.x = p1->lastVel.y = p1->lastVel.z = 0;
+
+		malla.push_back(p1);
+		z += 0.5;
+		//std::cout << arr[i] << " " << arr[i + 1] << " " << arr[i + 2] << std::endl;
+		i += 2;
+	}
+	
 }
 
 void PhysicsUpdate(float dt) {
 	//srand(time(NULL));
 	// Do your update code here...
 	// ...........................
-	//p1 = new Particle();
-	//particles.push_back(p1);
-	//std::cout << numParticles << std::endl;
+	/*
 	if (enableGravity) {
 		a = { 0,-9.81,0 };
 	}
@@ -274,7 +338,6 @@ void PhysicsUpdate(float dt) {
 	}
 
 	spawnParticles(particlesToSpawn);
-	//std::cout << numParticles << std::endl;
 	
 	//Llenar array de la gpu
 	int i = 0;
@@ -294,6 +357,34 @@ void PhysicsUpdate(float dt) {
 	}
 
 	LilSpheres::updateParticles(0, particles.size(), posParticula);
+	*/
+	/*if (gravityFake) {
+		for (int i = 0; i < 252 * 3; i++) {
+			if (arr[i + 1] >= 0) {
+				if (i != 13*3 && i!=0) {
+					arr[i + 1] -= 0.1;
+				}
+			}
+			i += 2;
+		}
+	}*/
+
+	int i = 0;
+
+	for (Particle* p1 : malla) {
+
+		glm::vec3 newpos = Particle::VerletPos(p1->pos, p1->lastPos, { 0,-9.81,0 }, dt);
+		p1->lastPos = p1->pos;
+		p1->pos = newpos;
+		arr[i] = p1->pos.x;
+		arr[i + 1] = p1->pos.y;
+		arr[i + 2] = p1->pos.z;
+		i += 3;
+	}
+
+
+	ClothMesh::updateClothMesh(arr);
+
 }
 
 void PhysicsCleanup() {
