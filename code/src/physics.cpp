@@ -49,9 +49,8 @@ public:
 	glm::vec3 vel, lastVel;
 	glm::vec3 FR;
 	Particle();
-	static glm::vec3 springForce(glm::vec3 P1, glm::vec3 P2, glm::vec3 v1, glm::vec3 v2, float lenght, const float Ke, const float Kd);
+	glm::vec3 springForce(glm::vec3 P1, glm::vec3 P2, glm::vec3 v1, glm::vec3 v2, float lenght, const float Ke, const float Kd);
 	static glm::vec3 VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, float time);
-	static glm::vec3 Velocity(glm::vec3 pos, glm::vec3 lastPos, float time);
 	~Particle();
 };
 
@@ -66,9 +65,6 @@ glm::vec3 Particle::VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, flo
 	return (pos + (pos - lastPos) + F*pow(time, 2));
 }
 
-glm::vec3 Particle::Velocity(glm::vec3 pos, glm::vec3 lastPos, float time) {
-	return ((pos - lastPos) / time);
-}
 /*
 namespace VAR {
 	
@@ -373,41 +369,19 @@ void PhysicsUpdate(float dt) {
 		}
 	}*/
 
+	int i = 0;
 
-	glm::vec3 newforce;
-	//CALCULAR COSAS
-	for (int i = 0; i < 251; ++i) {
-		if (i != 0 && i != 13) {
-			malla[i]->FR += glm::vec3{ 0,-9.81,0 };
-			// malla[i]->vel = Particle::Velocity(malla[i]->pos, malla[i]->lastPos,dt);
-			//if (i % 2 != 0) {
-			//malla[i]->lastVel = Particle::Velocity(malla[i+1]->pos, malla[i+1]->lastPos, dt);
-			// malla[i]->FR += Particle::springForce(malla[i]->pos, malla[i + 1]->pos, malla[i]->vel, malla[i]->lastVel, 1, 1, 1 );
-			//}
-			//else {
-			//	malla[i]->lastVel = Particle::Velocity(malla[i + 1]->pos, malla[i + 1]->lastPos, dt);
-			//	malla[i]->FR -= Particle::springForce(malla[i]->pos, malla[i + 1]->pos, malla[i]->vel, malla[i]->lastVel, 1, 1, 1);
-			//
-			//}
-		}
-		
+	for (Particle* p1 : malla) {
+
+		glm::vec3 newpos = Particle::VerletPos(p1->pos, p1->lastPos, { 0,-9.81,0 }, dt);
+		p1->lastPos = p1->pos;
+		p1->pos = newpos;
+		arr[i] = p1->pos.x;
+		arr[i + 1] = p1->pos.y;
+		arr[i + 2] = p1->pos.z;
+		i += 3;
 	}
-	for (int i = 0; i < 252; ++i) {
-		glm::vec3 newpos = Particle::VerletPos(malla[i]->pos, malla[i]->lastPos, malla[i]->FR, dt);
-		malla[i]->lastPos = malla[i]->pos;
-		malla[i]->pos = newpos;
-		arr[i] = malla[i]->pos.x;
-		arr[i + 1] = malla[i]->pos.y;
-		arr[i + 2] = malla[i]->pos.z;
-		
-	}
-	//PINTAR
-	/*glm::vec3 newpos = Particle::VerletPos(p1->pos, p1->lastPos, { 0,-9.81,0 }, dt);
-	p1->lastPos = p1->pos;
-	p1->pos = newpos;
-	arr[i] = p1->pos.x;
-	arr[i + 1] = p1->pos.y;
-	arr[i + 2] = p1->pos.z;*/
+
 
 	ClothMesh::updateClothMesh(arr);
 
