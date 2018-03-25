@@ -5,8 +5,8 @@
 // Boolean variables allow to show/hide the primitives
 bool renderSphere = false;
 bool renderCapsule = false;
-bool renderParticles = true;
-bool renderCloth = false;
+bool renderParticles = false;
+bool renderCloth = true;
 bool renderCube = false;
 
 namespace Sphere {
@@ -43,16 +43,16 @@ namespace Cube {
 }
 
 void setupPrims() {
-	Sphere::setupSphere();
-	Capsule::setupCapsule();
-	LilSpheres::setupParticles(LilSpheres::maxParticles);
+	//Sphere::setupSphere();
+	//Capsule::setupCapsule();
+	//LilSpheres::setupParticles(LilSpheres::maxParticles);
 	ClothMesh::setupClothMesh();
 	Cube::setupCube();
 }
 void cleanupPrims() {
-	Sphere::cleanupSphere();
-	Capsule::cleanupCapsule();
-	LilSpheres::cleanupParticles();
+	//Sphere::cleanupSphere();
+	//Capsule::cleanupCapsule();
+	//LilSpheres::cleanupParticles();
 	ClothMesh::cleanupClothMesh();
 	Cube::cleanupCube();
 }
