@@ -31,7 +31,9 @@ glm::vec3 cascadaVel = {0.f,1.f,1.f};
 float arr[252 * 3];
 float x = -4;
 float z = -4;
-
+float  ke = 50;
+float kd = 1.f;
+float e = 0.0f;
 
 bool gravityFake = false;
 
@@ -50,10 +52,13 @@ public:
 	glm::vec3 greenF[4] = { { 0,0,0 },{ 0,0,0 },{ 0,0,0 },{ 0,0,0 } };
 	glm::vec3 redF[4] = { { 0,0,0 },{ 0,0,0 },{ 0,0,0 },{ 0,0,0 } };
 	glm::vec3 blueF[4] = { { 0,0,0 },{ 0,0,0 },{ 0,0,0 },{ 0,0,0 } };
+	glm::vec3 ElasticF = { 0,0,0 };
 	Particle();
 	static glm::vec3 springForce(glm::vec3 P1, glm::vec3 P2, glm::vec3 v1, glm::vec3 v2, float lenght, const float Ke, const float Kd);
 	static glm::vec3 VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, float time);
 	static glm::vec3 Velocity(glm::vec3 pos, glm::vec3 lastPos, float time);
+	static glm::vec3 ElasticForce(glm::vec3 pos, float e, float d, glm::vec3 n);
+	static glm::vec3 ElasticVel(glm::vec3 vel,float e, glm::vec3 n);
 	~Particle();
 };
 
@@ -71,6 +76,17 @@ glm::vec3 Particle::VerletPos(glm::vec3 pos, glm::vec3 lastPos, glm::vec3 F, flo
 glm::vec3 Particle::Velocity(glm::vec3 pos, glm::vec3 lastPos, float time) {
 	return((pos - lastPos) / time);
 }
+
+glm::vec3 Particle::ElasticForce(glm::vec3 pos, float e, float d, glm::vec3 n) {
+	return(pos - (1 + e)*(n*pos + d)*n);
+}
+
+glm::vec3 Particle::ElasticVel(glm::vec3 vel,float e, glm::vec3 n) {
+	return(vel - (1 + e)*(n*vel)*n);
+}
+
+
+
 
 /*
 namespace VAR {
@@ -414,144 +430,244 @@ void PhysicsUpdate(float dt) {
 	arr[i + 2] = p1->pos.z;
 	i += 3;
 	}*/
-
+	glm::vec3 newPosE = { 0,0,0 };
 	int count = 0;
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-
 			//VELOCIDAD
 			glm::vec3 newVel = Particle::Velocity(particles[i][j]->pos, particles[i][j]->lastPos, dt);
 			particles[i][j]->lastVel = particles[i][j]->vel;
 			particles[i][j]->vel = newVel;
 
-			//FUERZA
-			//horizontal y vertical
-			glm::vec3 vert1;
-			glm::vec3 vert2;
-			glm::vec3 vert3;
-			glm::vec3 vert4;
+			//Pared en X=-5
+			if (particles[i][j]->pos.x <= -5) {
+				glm::vec3 n = { 1,0,0 };
+				glm::vec3 P = { -5,0,0 };
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
 
-			//diagonales
-			glm::vec3 vert5;
-			glm::vec3 vert6;
-			glm::vec3 vert7;
-			glm::vec3 vert8;
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, 0.5f, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
+			}
+			
+			//Pared en X=5
+			else if (particles[i][j]->pos.x >= 5) {
+				glm::vec3 n = { -1,0,0 };
+				glm::vec3 P = { 5,0,0 };
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
 
-			//horizontal y vertical largas
-			glm::vec3 vert9;
-			glm::vec3 vert10;
-			glm::vec3 vert11;
-			glm::vec3 vert12;
-
-			//VERTICALES Y HORIZONTALES
-			if (i > 0) {
-				vert1 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j]->pos, particles[i][j]->vel, particles[i - 1][j]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert1 = { 0, 0, 0 };
-			}
-			if (i < 17) {
-				vert3 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j]->pos, particles[i][j]->vel, particles[i + 1][j]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert3 = { 0, 0, 0 };
-			}
-			if (j > 0) {
-				vert4 = Particle::springForce(particles[i][j]->pos, particles[i][j - 1]->pos, particles[i][j]->vel, particles[i][j - 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert4 = { 0, 0, 0 };
-			}
-			if (j < 13) {
-				vert2 = Particle::springForce(particles[i][j]->pos, particles[i][j + 1]->pos, particles[i][j]->vel, particles[i][j + 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert2 = { 0, 0, 0 };
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, e, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
 			}
 
-			//DIAGONALES
-			if (i > 0 && j < 13) {
-				vert5 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j + 1]->pos, particles[i][j]->vel, particles[i - 1][j + 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert5 = { 0, 0, 0 };
-			}
-			if (i < 17 && j < 13) {
-				vert6 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j + 1]->pos, particles[i][j]->vel, particles[i + 1][j + 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert6 = { 0, 0, 0 };
-			}
-			if (i < 17 && j > 0) {
-				vert7 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j - 1]->pos, particles[i][j]->vel, particles[i + 1][j - 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert7 = { 0, 0, 0 };
-			}
-			if (i > 0 && j > 0) {
-				vert8 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j - 1]->pos, particles[i][j]->vel, particles[i - 1][j - 1]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert8 = { 0, 0, 0 };
+			//Pared en Y=-5
+			else if (particles[i][j]->pos.y <= -5) {
+				glm::vec3 n = { 0,1,0 };
+				glm::vec3 P = { 0,-5,0 };
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
+
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, e, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
 			}
 
-			//VERTICALES Y HORIZONTALES LARGAS
-			if (i > 2) {
-				vert9 = Particle::springForce(particles[i][j]->pos, particles[i - 2][j]->pos, particles[i][j]->vel, particles[i - 2][j]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert9 = { 0, 0, 0 };
-			}
-			if (j < 12) {
-				vert10 = Particle::springForce(particles[i][j]->pos, particles[i][j + 2]->pos, particles[i][j]->vel, particles[i][j + 2]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert10 = { 0, 0, 0 };
-			}
-			if (i < 16) {
-				vert11 = Particle::springForce(particles[i][j]->pos, particles[i + 2][j]->pos, particles[i][j]->vel, particles[i + 2][j]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert11 = { 0, 0, 0 };
-			}
-			if (j > 2) {
-				vert12 = Particle::springForce(particles[i][j]->pos, particles[i][j - 2]->pos, particles[i][j]->vel, particles[i][j - 2]->vel, 0.5, 20, 0);
-			}
-			else {
-				vert12 = { 0, 0, 0 };
-			}
+			//Pared en Y=5
+			else if (particles[i][j]->pos.y >= 5) {
+				glm::vec3 n = { 0,1,0 };
+				glm::vec3 P = { 0,5,0 };
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
 
-		
-			particles[i][j]->greenF[0] = vert1;
-			particles[i][j]->greenF[1] = vert2;
-			particles[i][j]->greenF[2] = vert3;
-			particles[i][j]->greenF[3] = vert4;
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, e, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
+			}
+			//Pared en Z=5
+			else if (particles[i][j]->pos.z >= 5) {
+				glm::vec3 n = { 0,0,-1 };
+				glm::vec3 P = { 0,0,5};
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
 
-			particles[i][j]->redF[0] = vert5;
-			particles[i][j]->redF[1] = vert6;
-			particles[i][j]->redF[2] = vert7;
-			particles[i][j]->redF[3] = vert8;
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, e, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
+			}
+			//Pared en Z=-5
+			else if (particles[i][j]->pos.z <= -5) {
+				glm::vec3 n = { 0,0,1 };
+				glm::vec3 P = { 0,0,-5 };
+				float d = -(n.x*P.x + n.y*P.y + n.z*P.z);
+				newPosE = Particle::ElasticForce(particles[i][j]->pos, e, d, n);
+				//std::cout << "ElasticForce: x =" << newPosE.x << " y =" << newPosE.y << " z =" << newPosE.z << std::endl;
 
-			particles[i][j]->blueF[0] = vert9;
-			particles[i][j]->blueF[1] = vert10;
-			particles[i][j]->blueF[2] = vert11;
-			particles[i][j]->blueF[3] = vert12;
+				glm::vec3 newVelE = Particle::ElasticVel(particles[i][j]->vel, e, n);
+				//std::cout << "ElasticVel: x =" << newVelE.x << " y =" << newVelE.y << " z =" << newVelE.z << std::endl;
+				glm::vec3 newVel = newVelE;
+				particles[i][j]->lastVel = particles[i][j]->vel;
+				particles[i][j]->vel = newVel;
+			}
+			
+				
+				//FUERZA
+				//horizontal y vertical
+				glm::vec3 vert1;
+				glm::vec3 vert2;
+				glm::vec3 vert3;
+				glm::vec3 vert4;
+
+				//diagonales
+				glm::vec3 vert5;
+				glm::vec3 vert6;
+				glm::vec3 vert7;
+				glm::vec3 vert8;
+
+				//horizontal y vertical largas
+				glm::vec3 vert9;
+				glm::vec3 vert10;
+				glm::vec3 vert11;
+				glm::vec3 vert12;
+
+				//VERTICALES Y HORIZONTALES
+				if (i > 0) {
+					vert1 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j]->pos, particles[i][j]->vel, particles[i - 1][j]->vel,0.5f, ke, kd);
+				}
+				else {
+					vert1 = { 0, 0, 0 };
+				}
+				if (i < 17) {
+					vert3 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j]->pos, particles[i][j]->vel, particles[i + 1][j]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert3 = { 0, 0, 0 };
+				}
+				if (j > 0) {
+					vert4 = Particle::springForce(particles[i][j]->pos, particles[i][j - 1]->pos, particles[i][j]->vel, particles[i][j - 1]->vel, 0.5f,ke, kd);
+				}
+				else {
+					vert4 = { 0, 0, 0 };
+				}
+				if (j < 13) {
+					vert2 = Particle::springForce(particles[i][j]->pos, particles[i][j + 1]->pos, particles[i][j]->vel, particles[i][j + 1]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert2 = { 0, 0, 0 };
+				}
+
+				//DIAGONALES
+				if (i > 0 && j < 13) {
+					vert5 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j + 1]->pos, particles[i][j]->vel, particles[i - 1][j + 1]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert5 = { 0, 0, 0 };
+				}
+				if (i < 17 && j < 13) {
+					vert6 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j + 1]->pos, particles[i][j]->vel, particles[i + 1][j + 1]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert6 = { 0, 0, 0 };
+				}
+				if (i < 17 && j > 0) {
+					vert7 = Particle::springForce(particles[i][j]->pos, particles[i + 1][j - 1]->pos, particles[i][j]->vel, particles[i + 1][j - 1]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert7 = { 0, 0, 0 };
+				}
+				if (i > 0 && j > 0) {
+					vert8 = Particle::springForce(particles[i][j]->pos, particles[i - 1][j - 1]->pos, particles[i][j]->vel, particles[i - 1][j - 1]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert8 = { 0, 0, 0 };
+				}
+				
+				//VERTICALES Y HORIZONTALES LARGAS
+				if (i > 2) {
+					vert9 = Particle::springForce(particles[i][j]->pos, particles[i - 2][j]->pos, particles[i][j]->vel, particles[i - 2][j]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert9 = { 0, 0, 0 };
+				}
+				if (j < 12) {
+					vert10 = Particle::springForce(particles[i][j]->pos, particles[i][j + 2]->pos, particles[i][j]->vel, particles[i][j + 2]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert10 = { 0, 0, 0 };
+				}
+				if (i < 16) {
+					vert11 = Particle::springForce(particles[i][j]->pos, particles[i + 2][j]->pos, particles[i][j]->vel, particles[i + 2][j]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert11 = { 0, 0, 0 };
+				}
+				if (j > 2) {
+					vert12 = Particle::springForce(particles[i][j]->pos, particles[i][j - 2]->pos, particles[i][j]->vel, particles[i][j - 2]->vel, 0.5f, ke, kd);
+				}
+				else {
+					vert12 = { 0, 0, 0 };
+				}
+
+				
+				particles[i][j]->greenF[0] = vert1;
+				particles[i][j]->greenF[1] = vert2;
+				particles[i][j]->greenF[2] = vert3;
+				particles[i][j]->greenF[3] = vert4;
+
+				particles[i][j]->redF[0] = vert5;
+				particles[i][j]->redF[1] = vert6;
+				particles[i][j]->redF[2] = vert7;
+				particles[i][j]->redF[3] = vert8;
+
+				particles[i][j]->blueF[0] = vert9;
+				particles[i][j]->blueF[1] = vert10;
+				particles[i][j]->blueF[2] = vert11;
+				particles[i][j]->blueF[3] = vert12;
+			
 		}
 	}
 
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-
+			
 			//POSICION
 			if (i != 0 && j != 14) {
-				glm::vec3 sumF = (particles[i][j]->greenF[0] + particles[i][j]->greenF[1] + particles[i][j]->greenF[2] + particles[i][j]->greenF[3]) +
-								 (particles[i][j]->redF[0] + particles[i][j]->redF[1] + particles[i][j]->redF[2] + particles[i][j]->redF[3]) +
-								 (particles[i][j]->blueF[0] + particles[i][j]->blueF[1] + particles[i][j]->blueF[2] + particles[i][j]->blueF[3]) +
-								 glm::vec3(0, -9.81, 0);
-				glm::vec3 newpos = Particle::VerletPos(particles[i][j]->pos, particles[i][j]->lastPos, sumF, dt);
-				particles[i][j]->lastPos = particles[i][j]->pos;
-				particles[i][j]->pos = newpos;
+				/*if (particles[i][j]->pos.x <= -5 || particles[i][j]->pos.x >= 5 || particles[i][j]->pos.y <= -5 || particles[i][j]->pos.y >= 5||particles[i][j]->pos.z <= -5 || particles[i][j]->pos.z >= 5) {
+					glm::vec3 sumF = (particles[i][j]->greenF[0] + particles[i][j]->greenF[1] + particles[i][j]->greenF[2] + particles[i][j]->greenF[3]) +
+						(particles[i][j]->redF[0] + particles[i][j]->redF[1] + particles[i][j]->redF[2] + particles[i][j]->redF[3]) +
+						(particles[i][j]->blueF[0] + particles[i][j]->blueF[1] + particles[i][j]->blueF[2] + particles[i][j]->blueF[3]) +
+						glm::vec3(0, -9.81, 0) - newPosE;
+					glm::vec3 newpos = Particle::VerletPos(particles[i][j]->pos, particles[i][j]->lastPos, sumF, dt);
+					particles[i][j]->lastPos = particles[i][j]->pos;
+					particles[i][j]->pos = newpos;
+				}*/
+				//else {
+					glm::vec3 sumF = (particles[i][j]->greenF[0] + particles[i][j]->greenF[1] + particles[i][j]->greenF[2] + particles[i][j]->greenF[3]) +
+						(particles[i][j]->redF[0] + particles[i][j]->redF[1] + particles[i][j]->redF[2] + particles[i][j]->redF[3]) +
+						(particles[i][j]->blueF[0] + particles[i][j]->blueF[1] + particles[i][j]->blueF[2] + particles[i][j]->blueF[3]) +
+						glm::vec3(0, -9.81, 0);
+					glm::vec3 newpos = Particle::VerletPos(particles[i][j]->pos, particles[i][j]->lastPos, sumF, dt);
+					particles[i][j]->lastPos = particles[i][j]->pos;
+					particles[i][j]->pos = newpos;
+				//}
 			}
 
 
