@@ -45,6 +45,12 @@ namespace VAR {
 	glm::vec3 pointReboteEsfera(glm::vec3 point, glm::vec3 n, glm::vec3 Q);
 	glm::vec3 velocityReboteEsfera(glm::vec3 lastVelocity, glm::vec3 n);
 }
+namespace Cube {
+	void setupCube();
+	void cleanupCube();
+	void updateCube(const glm::mat4& transform);
+	void drawCube();
+}
 extern void setupPrims();
 extern void renderPrims();
 extern void cleanupPrims();
@@ -118,6 +124,7 @@ void GLinit(int width, int height) {
 	// Setup shaders & geometry
 	Box::setupCube();
 	Axis::setupAxis();
+	Cube::setupCube();
 	setupPrims();
 	//Sphere::setupSphere(VAR::C,VAR::SphereRad);
 	//Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
@@ -126,6 +133,7 @@ void GLinit(int width, int height) {
 void GLcleanup() {
 	Box::cleanupCube();
 	Axis::cleanupAxis();
+	Cube::cleanupCube();
 	cleanupPrims();
 	//Sphere::cleanupSphere();
 	//Capsule::cleanupCapsule();
@@ -144,6 +152,7 @@ void GLrender() {
 	// render code
 	Box::drawCube();
 	Axis::drawAxis();
+	Cube::drawCube();
 	//Sphere::drawSphere();
 	//Capsule::drawCapsule();
 	renderPrims();
