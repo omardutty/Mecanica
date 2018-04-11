@@ -9,7 +9,11 @@
 
 glm::mat4 objMat, rotXMat,rotYMat,rotZMat;
 glm::vec3 gravity = { 0,9.81,0 };
+glm::vec4 position = { (rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f };
+glm::vec4 lastX = { 0,0,0,1 };
+glm::vec4 llMoment = { 0,0,0,1 };
 float click = false;
+float mass, w, h, d;
 namespace Cube{
 	void updateCube(const glm::mat4& transform);
 }
@@ -17,21 +21,21 @@ class RigidBody {
 public:
 	//position
 	glm::vec3 x;
-
 	//orientation
 	glm::mat4 R;
-
 	//linear momentum
-	glm::vec3 P;
-
+	glm::vec4 P;
 	//angular momentum
 	glm::vec3 L;
-
 	float Mass;
 
 	static glm::vec4 nextP(glm::vec4 P, float dt, glm::vec4 F);
 	static glm::vec4 calcV(glm::vec4 P, float M);
 	static glm::vec4 nextX(glm::vec4 x, float dt, glm::vec4 V);
+	static glm::mat3 lastR(glm::mat3 lastR, glm::vec3 w, float dt);
+	static glm::mat3 calcI(glm::mat3 R, float mass, float w, float h, float d);
+	static glm::vec3 angularMoment(glm::vec3 L,float dt, glm::vec3 t);
+	static glm::vec3 w(glm::mat3 R, glm::vec3 L);
 
 	RigidBody();
 	~RigidBody();
@@ -39,9 +43,9 @@ private:
 };
 
 RigidBody::RigidBody() {
-	P = { 0.0 , 0.0, 0.0 };
+	P = { 0.0 , 0.0, 0.0,1 };
 	x = { 0.0, 5.0, 0.0 };
-	Mass = 0.5;
+	Mass = 5;
 }
 
 glm::vec4 RigidBody::nextP(glm::vec4 P, float dt, glm::vec4 F) {
@@ -55,6 +59,22 @@ glm::vec4 RigidBody::calcV(glm::vec4 P, float M) {
 glm::vec4 RigidBody::nextX(glm::vec4 x, float dt, glm::vec4 V) {
 	return x + dt*V;
 }
+
+glm::mat3 RigidBody::lastR(glm::mat3 R, glm::vec3 w, float dt) {
+	glm::mat3 wMat = { 0,-w.z,w.y,w.z,0,-w.x,-w.y,w.x,0 };
+	return R + dt*(wMat*R);
+}
+
+glm::mat3 RigidBody::calcI(glm::mat3 R, float mass, float w, float h, float d) {
+	glm::mat3 Ibody = { (1 / 12)*mass*(pow(d,2) + pow(h,2)),0,0,0,(1 / 12)*mass*(pow(w,2) + pow(d,2)),0,0,0,(1 / 12)*mass*(pow(w,2) + pow(h,2)) };
+	return R*glm::inverse(Ibody)*R;
+}
+
+glm::vec3 RigidBody::angularMoment(glm::vec3 L,float dt, glm::vec3 t) {
+	return L + dt*t;
+}
+
+float a = pow(2, 2);
 
 bool show_test_window = false;
 void GUI() {
@@ -101,10 +121,14 @@ float t = 0;
 void PhysicsInit() {
 	//RigidBody
 	srand(time(NULL));
+	position = { (rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f };
 	objMat = glm::mat4(1, 0, 0, 0.f,
 		0, 1, 0, 0.f,
 		0, 0, 1, 0.f,
-		(rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f);
+		position.x, position.y, position.z, 1);
+	lastX = position;
+	mass = 0.5;
+	llMoment = { 0, 0, 0, 1 };
 	float randValX = rand();
 	float randValY = rand();
 	float randValZ = rand();
@@ -114,11 +138,18 @@ void PhysicsInit() {
 }
 
 void PhysicsUpdate(float dt) {
-	//glm::vec3 linealMoment = RigidBody::nextP(glm::vec4(objMat[12],objMat[13],objMat[14],1),dt,glm::vec4(0,0,0,1));
-	glm::vec4 velocity = RigidBody::calcV(glm::vec4((rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4,1), 0.5);
-	glm::vec4 nextPos = RigidBody::nextX(glm::vec4(0,0.5,0,1),dt,velocity);
-	/*glm::vec3 nextPos = { 0,0,0 };*/
-	objMat = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, nextPos.x,nextPos.y,nextPos.z, 1);
+	glm::vec4 Mtmp = RigidBody::nextP(llMoment, dt, glm::vec4(0, -9.81*mass, 0, 0));
+	glm::vec4 linealMoment = llMoment;
+	llMoment = Mtmp;
+	glm::vec4 velocity = RigidBody::calcV(linealMoment, mass);
+	glm::vec4 tmp = RigidBody::nextX(lastX, dt, velocity);
+	position = lastX;
+	lastX = tmp;
+
+	objMat = glm::mat4(1, 0, 0, 0.f,
+		0, 1, 0, 0.f,
+		0, 0, 1, 0.f,
+		position.x, position.y, position.z, 1);
 	/*if (t > 1) {
 		click = true;
 		t = 0;
