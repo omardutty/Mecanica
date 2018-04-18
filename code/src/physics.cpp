@@ -5,14 +5,16 @@
 #include <deque>
 #include<iostream>
 #include<time.h>
+#include<glm\gtc\quaternion.hpp>
 
 glm::mat3 I;
 glm::mat3 lastI{	1,0,0,
 					0,1,0,
 					0,0,1 };
-glm::mat3 LastR = { 1,0,0,
+glm::mat3 LastR  { 1,0,0,
 					0,1,0,
 					0,0,1};
+glm::quat LastRQ;
 glm::vec3 tor,AngMoment;
 glm::vec3 LastAngMoment = { 0,0,0 };
 glm::mat4 objMat, rotXMat,rotYMat,rotZMat;
@@ -22,6 +24,10 @@ glm::vec4 lastX = { 0,0,0,1 };
 glm::vec4 llMoment = { 0,0,0,1 };
 float click = false;
 float mass, w, h, d;
+glm::vec4 F;
+
+glm::quat q;
+
 namespace Cube{
 	void updateCube(const glm::mat4& transform);
 }
@@ -40,7 +46,7 @@ public:
 	static glm::vec4 nextP(glm::vec4 P, float dt, glm::vec4 F);
 	static glm::vec4 calcV(glm::vec4 P, float M);
 	static glm::vec4 nextX(glm::vec4 x, float dt, glm::vec4 V);
-	static glm::mat3 lastR(glm::mat3 lastR, glm::vec3 w, float dt);
+	static glm::quat lastR(glm::mat3 lastR, glm::vec3 w, float dt);
 	static glm::mat3 calcI(glm::mat3 R, float mass, float w, float h, float d);
 	static glm::vec3 angularMoment(glm::vec3 L,float dt, glm::vec3 t);
 	static glm::vec3 w(glm::vec3 L,glm::mat3 I);
@@ -69,27 +75,27 @@ glm::vec4 RigidBody::nextX(glm::vec4 x, float dt, glm::vec4 V) {
 	return x + dt*V;
 }
 
-glm::mat3 RigidBody::lastR(glm::mat3 R, glm::vec3 w, float dt) {
-	glm::mat3 wMat = { 0,-w.z,w.y,w.z,0,-w.x,-w.y,w.x,0 };
-	return R + dt*(wMat*R);
+glm::quat RigidBody::lastR(glm::mat3 R, glm::vec3 w, float dt) {
+	glm::mat3 wMat = { 0,w.z,-w.y,-w.z,0,w.x,w.y,-w.x,0 };
+	//return R + dt*(wMat*R);
+	return glm::normalize(q + dt*(0.5f*(glm::quat(0, w)*q)));
 }
 
 glm::mat3 RigidBody::calcI(glm::mat3 R, float mass, float w, float h, float d) {
 	glm::mat3 Ibody = { (1.f / 12.f)*mass*(pow(d,2) + pow(h,2)),0,0,0,(1.f / 12.f)*mass*(pow(w,2) + pow(d,2)),0,0,0,(1.f / 12.f)*mass*(pow(w,2) + pow(h,2)) };
-	return R*glm::inverse(Ibody)*R;
+	return R*glm::inverse(Ibody)*glm::transpose(R);
 }
 
 glm::vec3 RigidBody::angularMoment(glm::vec3 L,float dt, glm::vec3 t) {
 	return L + dt*t;
 }
 glm::vec3 RigidBody::w(glm::vec3 L, glm::mat3 I) {
-	return glm::inverse(I)*L;
+	return I*L;
 }
 
 glm::vec3 RigidBody::Torque(glm::vec3 Punto, glm::vec3 Pos, glm::vec3 F) {
 	glm::vec3 vector = Punto - Pos;
-	return glm::normalize(vector * F);
-
+	return glm::cross(vector, F);
 }
 
 float a = pow(2, 2);
@@ -144,8 +150,9 @@ void PhysicsInit() {
 		0, 1, 0, 0.f,
 		0, 0, 1, 0.f,
 		position.x, position.y, position.z, 1);
-	lastX = position;
 	mass = 0.5;
+	F = { 0,-9.81*mass,0,1 };
+	lastX = position;
 	llMoment = { 0, 0, 0, 1 };
 	float randValX = rand();
 	float randValY = rand();
@@ -153,52 +160,79 @@ void PhysicsInit() {
 	rotXMat = glm::mat4(1, 0, 0, 0, 0, cos(randValX), sin(randValX), 0, 0, -sin(randValX), cos(randValX), 0, 0, 0, 0, 1);
 	rotYMat = glm::mat4(cos(randValY), 0, -sin(randValY), 0, 0, 1, 0, 0, sin(randValY), 0, cos(randValY), 0, 0, 0, 0, 1);
 	rotZMat = glm::mat4(cos(randValZ), sin(randValZ), 0, 0, -sin(randValZ), cos(randValZ), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-	tor = RigidBody::Torque(glm::vec3((rand() % 10) / 10.f, (rand() % 10) / 10.f, (rand() % 10) / 10.f), position, glm::vec3(0, -9.81*mass, 0));
+	objMat = objMat*rotXMat*rotYMat*rotZMat;
+	tor = RigidBody::Torque(glm::vec3((rand() % 10) / 10.f, (rand() % 10) / 10.f, (rand() % 10) / 10.f), position, glm::vec3(1,0,0));
 	AngMoment = RigidBody::angularMoment(glm::vec3(0.f, 0.f, 0.f), 0.f, tor);
 	LastAngMoment = AngMoment;
-	LastR = { 1,0,0,
-		0,1,0,
-		0,0,1 };
+	LastR = rotXMat*rotYMat*rotZMat;
+	LastRQ = glm::quat_cast(LastR);
 	lastI = { 1,0,0,
 		0,1,0,
 		0,0,1 };
+	q = glm::quat_cast(LastR);
 }
 
 void PhysicsUpdate(float dt) {
+
 	//Momento Lineal
-	glm::vec4 Mtmp = RigidBody::nextP(llMoment, dt, glm::vec4(0, -9.81*mass, 0, 0));
+	glm::vec4 Mtmp = RigidBody::nextP(llMoment, dt,F);
 	glm::vec4 linealMoment = llMoment;
 	llMoment = Mtmp;
+
 	//Velocidad
 	glm::vec4 velocity = RigidBody::calcV(linealMoment, mass);
+
 	//Posicion
 	glm::vec4 tmp = RigidBody::nextX(lastX, dt, velocity);
 	position = lastX;
 	lastX = tmp;
+
 	//Momento Angular
 	glm::vec3 AnMomnentTmp = RigidBody::angularMoment(LastAngMoment, dt, tor);
 	AngMoment = LastAngMoment;
 	LastAngMoment = AnMomnentTmp;
+
 	//Inercia
 	glm::mat3 Itmp = RigidBody::calcI(LastR, mass, 1.f, 1.f, 1.f);
 	I = lastI;
 	lastI = Itmp;
-	
 
-	objMat = glm::mat4(1, 0, 0, 0.f,
-		0, 1, 0, 0.f,
-		0, 0, 1, 0.f,
-		position.x, position.y, position.z, 1);
-	/*if (t > 1) {
-		click = true;
-		t = 0;
+	//velocidad angular
+	glm::vec3 omega = RigidBody::w(LastAngMoment, lastI);
+
+	//Rotation Matrix
+	glm::quat tmpMat = RigidBody::lastR(LastR, omega, dt);
+	q = LastRQ;
+	LastRQ = tmpMat;
+
+	LastR = glm::mat4_cast(LastRQ);
+	glm::mat4 rotationMatrix = glm::mat4_cast(q);
+
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			std::cout << rotationMatrix[i][j] << std::endl;
+		}
 	}
-	t += 0.1;*/
+	std::cout << "endMatrix" << std::endl;
+
+
+	objMat = glm::mat4(objMat[0][0], objMat[0][1], objMat[0][2], objMat[0][3],
+		objMat[1][0], objMat[1][1], objMat[1][2], objMat[1][3],
+		objMat[2][0], objMat[2][1], objMat[2][2], objMat[2][3],
+		position.x, position.y, position.z, objMat[3][3]);
+
+	glm::mat4 rotMat = glm::mat4(rotationMatrix[0][0], rotationMatrix[0][1], rotationMatrix[0][2], objMat[0][3],
+		rotationMatrix[1][0], rotationMatrix[1][1], rotationMatrix[1][2], objMat[1][3],
+		rotationMatrix[2][0], rotationMatrix[2][1], rotationMatrix[2][2], objMat[2][3],
+		0,0,0,1);
+
+
 	if (click) {
 		PhysicsInit();
 		click = false;
 	}
-	Cube::updateCube(objMat*rotXMat*rotYMat*rotZMat);
+	Cube::updateCube(objMat*rotMat);
 }
 
 	void PhysicsCleanup() {
