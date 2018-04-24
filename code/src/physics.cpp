@@ -7,6 +7,7 @@
 #include<time.h>
 #include<glm\gtc\quaternion.hpp>
 
+glm::vec4 vertices[8];
 glm::mat3 I;
 glm::mat3 lastI{	1,0,0,
 					0,1,0,
@@ -17,7 +18,7 @@ glm::mat3 LastR  { 1,0,0,
 glm::quat LastRQ;
 glm::vec3 tor,AngMoment;
 glm::vec3 LastAngMoment = { 0,0,0 };
-glm::mat4 objMat, rotXMat,rotYMat,rotZMat;
+glm::mat4 objMat, rotXMat, rotYMat, rotZMat,rotMat;
 glm::vec3 gravity = { 0,9.81,0 };
 glm::vec4 position = { (rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f };
 glm::vec4 lastX = { 0,0,0,1 };
@@ -145,11 +146,13 @@ float t = 0;
 void PhysicsInit() {
 	//RigidBody
 	srand(time(NULL));
+	
 	position = { (rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f };
 	objMat = glm::mat4(1, 0, 0, 0.f,
 		0, 1, 0, 0.f,
 		0, 0, 1, 0.f,
 		position.x, position.y, position.z, 1);
+	rotMat = glm::mat4(1.f);
 	mass = 0.5;
 	F = { 0,-9.81*mass,0,1 };
 	lastX = position;
@@ -170,6 +173,11 @@ void PhysicsInit() {
 		0,1,0,
 		0,0,1 };
 	q = glm::quat_cast(LastR);
+
+		vertices[8] = ( glm::vec4(position.x - 1,position.y + 1,position.z + 1,1)*rotMat,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)*rotMat,
+		glm::vec4(position.x + 1,position.y + 1,position.z + 1,1)*rotMat,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)*rotMat,
+		glm::vec4(position.x - 1,position.y - 1,position.z + 1,1)*rotMat,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)*rotMat,
+		glm::vec4(position.x + 1,position.y - 1,position.z + 1,1)*rotMat,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)*rotMat );
 }
 
 void PhysicsUpdate(float dt) {
@@ -222,11 +230,15 @@ void PhysicsUpdate(float dt) {
 		objMat[2][0], objMat[2][1], objMat[2][2], objMat[2][3],
 		position.x, position.y, position.z, objMat[3][3]);
 
-	glm::mat4 rotMat = glm::mat4(rotationMatrix[0][0], rotationMatrix[0][1], rotationMatrix[0][2], objMat[0][3],
+	rotMat = glm::mat4(rotationMatrix[0][0], rotationMatrix[0][1], rotationMatrix[0][2], objMat[0][3],
 		rotationMatrix[1][0], rotationMatrix[1][1], rotationMatrix[1][2], objMat[1][3],
 		rotationMatrix[2][0], rotationMatrix[2][1], rotationMatrix[2][2], objMat[2][3],
 		0,0,0,1);
 
+	/*for (int i = 0; i <= 8; i++) {
+		glm::dot(glm::vec3(0,1,0),)
+		if(vertices[i])
+	}*/
 
 	if (click) {
 		PhysicsInit();
