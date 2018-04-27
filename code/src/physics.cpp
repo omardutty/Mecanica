@@ -180,7 +180,7 @@ void PhysicsInit() {
 		position.x, position.y, position.z, 1);
 	rotMat = glm::mat4(1.f);
 	mass = 0.5;
-	F = { 9.81*mass,0/*-9.81*mass*/,0,1 };
+	F = { -9.81*mass,/*9.81*mass*/0,0,1 };
 	lastX = position;
 	llMoment = { 0, 0, 0, 1 };
 	float randValX = rand();
@@ -268,12 +268,6 @@ void PhysicsUpdate(float dt) {
 	glm::mat4 rotationMatrix = glm::mat4_cast(q);
 
 
-	/*for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			std::cout << rotationMatrix[i][j] << std::endl;
-		}
-	}
-	std::cout << "endMatrix" << std::endl;*/
 
 
 	objMat = glm::mat4(objMat[0][0], objMat[0][1], objMat[0][2], objMat[0][3],
@@ -312,9 +306,9 @@ void PhysicsUpdate(float dt) {
 
 
 		float epsilon = 1;
-		float epsilon2 = -5.2;
+		float epsilon2 = -6;
 		float epsilon3 = 6;
-		float epsilon4 = 10.1;
+		float epsilon4 = 10.5;
 		
 		//SUELO
 		//(n·p+d)*(n·pA+d)
@@ -371,7 +365,7 @@ void PhysicsUpdate(float dt) {
 			findPoint2:
 				for (int i = 0; i < 8; i++) {
 					std::cout << vertice[i].x << std::endl;
-					if (vertice[i].x < epsilon2+0.4f && vertice[i].x>epsilon2) {
+					if (vertice[i].x > epsilon2 && vertice[i].x < epsilon2-2) {
 						//POSICION ENCONTRADA
 						goodPos = true;
 						glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
@@ -455,7 +449,7 @@ void PhysicsUpdate(float dt) {
 				for (int i = 0; i < 8; i++) {
 					std::cout << vertice[i].y << std::endl;
 
-					if (vertice[i].y < epsilon && vertice[i].y>-epsilon) {
+					if (vertice[i].y < epsilon4 && vertice[i].y>epsilon4-1.5f) {
 						//POSICION ENCONTRADA
 						goodPos = true;
 						glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
@@ -473,11 +467,11 @@ void PhysicsUpdate(float dt) {
 						llMoment = llMoment + (glm::vec4)(torqueImpulse, 1);
 					}
 					else {
-						if (vertice[i].y > epsilon) {
+						if (vertice[i].y > epsilon4) {
 							timeAux = dt - timeAux / 2;
 							posAux = RigidBody::nextX(lastX, timeAux, velocity);
 						}
-						else if (vertice[i].y < -epsilon) {
+						else if (vertice[i].y < epsilon4-1.5f) {
 							timeAux /= 2;
 							posAux = RigidBody::nextX(lastX, timeAux, velocity);
 						}
