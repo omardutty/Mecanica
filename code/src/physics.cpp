@@ -7,6 +7,28 @@
 #include<time.h>
 #include<glm\gtc\quaternion.hpp>
 
+
+
+//VerticeActual
+glm::vec4 vertice;
+glm::vec4 vertice2;
+glm::vec4 vertice3;
+glm::vec4 vertice4;
+glm::vec4 vertice5;
+glm::vec4 vertice6;
+glm::vec4 vertice7;
+glm::vec4 vertice8;
+//VerticeAnterior
+glm::vec4 Lastvertice ;
+glm::vec4 Lastvertice2;
+glm::vec4 Lastvertice3;
+glm::vec4 Lastvertice4;
+glm::vec4 Lastvertice5;
+glm::vec4 Lastvertice6;
+glm::vec4 Lastvertice7;
+glm::vec4 Lastvertice8;
+
+
 glm::vec4 vertices[8];
 glm::vec4 Lastvertices[8];
 glm::mat3 I;
@@ -26,7 +48,7 @@ glm::vec4 lastX = { 0,0,0,1 };
 glm::vec4 llMoment = { 0,0,0,1 };
 float click = false;
 float mass, w, h, d;
-float Dplane;
+float Dplane,LastDplane;
 glm::vec4 F;
 
 
@@ -149,7 +171,8 @@ float t = 0;
 void PhysicsInit() {
 	//RigidBody
 	srand(time(NULL));
-	Dplane = 0;
+	
+	
 	position = { (rand() % 9) - 4, (rand() % 9) + 1, (rand() % 9) - 4, 1.f };
 	objMat = glm::mat4(1, 0, 0, 0.f,
 		0, 1, 0, 0.f,
@@ -176,11 +199,37 @@ void PhysicsInit() {
 		0,1,0,
 		0,0,1 };
 	q = glm::quat_cast(LastR);
+	//VerticeActual
+	vertice = (glm::vec4(position.x - 1, position.y + 1, position.z + 1, 1)*rotMat);
+	vertice2 = (glm::vec4(position.x - 1, position.y + 1, position.z - 1, 1)*rotMat);
+	vertice3 = (glm::vec4(position.x + 1, position.y + 1, position.z + 1, 1)*rotMat);
+	vertice4 = (glm::vec4(position.x + 1, position.y + 1, position.z - 1, 1)*rotMat);
+	vertice5 = (glm::vec4(position.x - 1, position.y - 1, position.z + 1, 1)*rotMat);
+	vertice6 = (glm::vec4(position.x - 1, position.y + 1, position.z - 1, 1)*rotMat);
+	vertice7 = (glm::vec4(position.x + 1, position.y - 1, position.z + 1, 1)*rotMat);
+	vertice8 = (glm::vec4(position.x + 1, position.y + 1, position.z - 1, 1)*rotMat);
+	//VerticeAnterior
+	Lastvertice = (glm::vec4(position.x - 1, position.y + 1, position.z + 1, 1)*rotMat);
+	Lastvertice2 = (glm::vec4(position.x - 1, position.y + 1, position.z - 1, 1)*rotMat);
+	Lastvertice3 = (glm::vec4(position.x + 1, position.y + 1, position.z + 1, 1)*rotMat);
+	Lastvertice4 = (glm::vec4(position.x + 1, position.y + 1, position.z - 1, 1)*rotMat);
+	Lastvertice5 = (glm::vec4(position.x - 1, position.y - 1, position.z + 1, 1)*rotMat);
+	Lastvertice6 = (glm::vec4(position.x - 1, position.y + 1, position.z - 1, 1)*rotMat);
+	Lastvertice7 = (glm::vec4(position.x + 1, position.y - 1, position.z + 1, 1)*rotMat);
+	Lastvertice8 = (glm::vec4(position.x + 1, position.y + 1, position.z - 1, 1)*rotMat);
+	//distance
+	Dplane = abs(position.y - 0);
+	std::cout << "D" << Dplane << std::endl;
+	std::cout << "vertice : x" << vertice.x << " y" << vertice.y << " z" << vertice.z << std::endl;
 
-		vertices[8] = Lastvertices[8] = ( glm::vec4(position.x - 1,position.y + 1,position.z + 1,1)*rotMat,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)*rotMat,
-		glm::vec4(position.x + 1,position.y + 1,position.z + 1,1)*rotMat,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)*rotMat,
-		glm::vec4(position.x - 1,position.y - 1,position.z + 1,1)*rotMat,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)*rotMat,
-		glm::vec4(position.x + 1,position.y - 1,position.z + 1,1)*rotMat,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)*rotMat );		
+	std::cout << "Position: x" << position.x << " y" << position.y << " z" << position.z << std::endl;
+		//vertices[8] = /*Lastvertices[8] =*/ (	glm::vec4(position.x - 1,position.y + 1,position.z + 1,1)/**rotMat*/,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)/**rotMat*/,
+		//									glm::vec4(position.x + 1,position.y + 1,position.z + 1,1)/**rotMat*/,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)/**rotMat*/,
+		//									glm::vec4(position.x - 1,position.y - 1,position.z + 1,1)/**rotMat*/,glm::vec4(position.x - 1,position.y + 1,position.z - 1,1)/**rotMat*/,
+		//									glm::vec4(position.x + 1,position.y - 1,position.z + 1,1)/**rotMat*/,glm::vec4(position.x + 1,position.y + 1,position.z - 1,1)/**rotMat*/ );	
+		//for (int i = 0; i < 8; i++) {
+		//	std::cout << i << ": x" << vertices[i].x << " y" << vertices[i].y << " z" << vertices[i].z << std::endl;
+		//}
 }
 
 void PhysicsUpdate(float dt) {
@@ -220,12 +269,12 @@ void PhysicsUpdate(float dt) {
 	glm::mat4 rotationMatrix = glm::mat4_cast(q);
 
 
-	for (int i = 0; i < 3; i++) {
+	/*for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			std::cout << rotationMatrix[i][j] << std::endl;
 		}
 	}
-	std::cout << "endMatrix" << std::endl;
+	std::cout << "endMatrix" << std::endl;*/
 
 
 	objMat = glm::mat4(objMat[0][0], objMat[0][1], objMat[0][2], objMat[0][3],
@@ -237,37 +286,90 @@ void PhysicsUpdate(float dt) {
 		rotationMatrix[1][0], rotationMatrix[1][1], rotationMatrix[1][2], objMat[1][3],
 		rotationMatrix[2][0], rotationMatrix[2][1], rotationMatrix[2][2], objMat[2][3],
 		0,0,0,1);
+	LastDplane = Dplane;
+	Dplane = abs(position.y - 0);
+	//VerticeAnterior
+	Lastvertice = vertice;
+	Lastvertice2 = vertice2;
+	Lastvertice3 = vertice3;
+	Lastvertice4 = vertice4;
+	Lastvertice5 = vertice5;
+	Lastvertice6 = vertice6;
+	Lastvertice7 = vertice7;
+	Lastvertice8 = vertice8;
+	//VerticeActual
+	vertice = (glm::vec4(position.x - 0.5f, position.y - 0.5f, position.z - 0.5f, 1)/**rotMat*/);
+	vertice2 = (glm::vec4(position.x - 0.5f, position.y - 0.5f, position.z + 0.5f, 1)/**rotMat*/);
+	vertice3 = (glm::vec4(position.x + 0.5f, position.y - 0.5f, position.z + 0.5f, 1)/**rotMat*/);
+	vertice4 = (glm::vec4(position.x + 0.5f, position.y - 0.5f, position.z - 0.5f, 1)/**rotMat*/);
+	vertice5 = (glm::vec4(position.x - 0.5f, position.y + 0.5f, position.z - 0.5f, 1)/**rotMat*/);
+	vertice6 = (glm::vec4(position.x - 0.5f, position.y + 0.5f, position.z + 0.5f, 1)/**rotMat*/);
+	vertice7 = (glm::vec4(position.x + 0.5f, position.y + 0.5f, position.z + 0.5f, 1)/**rotMat*/);
+	vertice8 = (glm::vec4(position.x + 0.5f, position.y + 0.5f, position.z - 0.5f, 1)/**rotMat*/);
+	
 
 	float timeAux = dt;
 	//Comprobación de colision de los vertices
-	for (int i = 0; i <= 8; ++i) {
 
+	/*for (int i = 0; i <= 8; ++i) {
+*/
 		float epsilon = 0.1;
-
+		std::cout << vertice.y << std::endl;
 		//SUELO
 		//(n·p+d)*(n·pA+d)
-		float dot = (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)vertices[i]) + Dplane) * (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)Lastvertices[i]) + Dplane);
+		/*float dot = (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)vertice) + Dplane) * (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)Lastvertice) + Dplane);
 
-		if (dot <= 0) {
+		if (dot <= 0) {*/
+		if(vertice.y <=0){
 			glm::vec4 posAux;
-			while (vertices[i].y >= epsilon && vertices[i].y > -epsilon) {
+			while (vertice.y > epsilon && vertice.y < -epsilon) {
 				timeAux /= 2;
-				 posAux = RigidBody::nextX(lastX, timeAux, velocity);
+				posAux = RigidBody::nextX(lastX, timeAux, velocity);
 			}
 			//vrel calc
 			glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
 			glm::vec4 Va = RigidBody::calcV(mlAux, mass);
 			glm::vec3 amAux = RigidBody::angularMoment(LastAngMoment, timeAux, tor);
 			glm::vec3 omegaAux = RigidBody::w(amAux, lastI);
-			glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertices[i] - (glm::vec3)posAux));
+			glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertice - (glm::vec3)posAux));
 			float Vrel = glm::dot(glm::vec3(0, 1, 0), pad);
-			float j = (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertices[i], lastI * (glm::cross((glm::vec3)vertices[i], glm::vec3(0, 1, 0))))));
-			glm::vec3 J = j*glm::vec3(0, 1, 0);
-			glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertices[i], J);
+			float j = (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertice, lastI * (glm::cross((glm::vec3)vertice, glm::vec3(0, 1, 0))))));
+			glm::vec3 J = j * glm::vec3(0, 1, 0);
+			glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertice, J);
 
-			(glm::vec3)vertices[i] = (glm::vec3)Lastvertices[i] + J;
+			(glm::vec3)vertice = (glm::vec3)Lastvertice + J;
 			LastAngMoment = AngMoment + torqueImpulse;
 		}
+	/*}*/
+
+	//for (int i = 0; i <= 8; ++i) {
+
+	//	float epsilon = 0.1;
+
+	//	//SUELO
+	//	//(n·p+d)*(n·pA+d)
+	//	float dot = (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)vertices[i]) + Dplane) * (glm::dot(glm::vec3(0, 1, 0), (glm::vec3)Lastvertices[i]) + Dplane);
+
+	//	if (dot <= 0) {
+	//		glm::vec4 posAux;
+	//		while (vertices[i].y <= epsilon && vertices[i].y > -epsilon) {
+	//			timeAux /= 2;
+	//			 posAux = RigidBody::nextX(lastX, timeAux, velocity);
+	//		}
+	//		//vrel calc
+	//		glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
+	//		glm::vec4 Va = RigidBody::calcV(mlAux, mass);
+	//		glm::vec3 amAux = RigidBody::angularMoment(LastAngMoment, timeAux, tor);
+	//		glm::vec3 omegaAux = RigidBody::w(amAux, lastI);
+	//		glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertices[i] - (glm::vec3)posAux));
+	//		float Vrel = glm::dot(glm::vec3(0, 1, 0), pad);
+	//		float j = (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertices[i], lastI * (glm::cross((glm::vec3)vertices[i], glm::vec3(0, 1, 0))))));
+	//		glm::vec3 J = j*glm::vec3(0, 1, 0);
+	//		glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertices[i], J);
+
+	//		(glm::vec3)vertices[i] = (glm::vec3)Lastvertices[i] + J;
+	//		LastAngMoment = AngMoment + torqueImpulse;
+	//	}
 	#pragma region
 			//TECHO
 			//(n·p+d)*(n·pA+d)
@@ -389,7 +491,7 @@ void PhysicsUpdate(float dt) {
 			//	LastAngMoment = AngMoment + torqueImpulse;
 			//}
 #pragma endregion
-	}
+	/*}*/
 
 	if (click) {
 		PhysicsInit();
