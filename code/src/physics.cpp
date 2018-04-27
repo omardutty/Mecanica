@@ -180,7 +180,7 @@ void PhysicsInit() {
 		position.x, position.y, position.z, 1);
 	rotMat = glm::mat4(1.f);
 	mass = 0.5;
-	F = { 0,-9.81*mass,0,1 };
+	F = { 0,9.81*mass,0,1 };
 	lastX = position;
 	llMoment = { 0, 0, 0, 1 };
 	float randValX = rand();
@@ -322,6 +322,7 @@ void PhysicsUpdate(float dt) {
 		bool goodPos = false;
 
 		for (int j = 0; j < 8; j++) {
+			//Suelo(y=0)
 			if (vertice[j].y <= 0 && !goodPos) {
 				glm::vec4 posAux;
 				
@@ -355,8 +356,133 @@ void PhysicsUpdate(float dt) {
 						}
 						goto findPoint;
 					}
+
+					
 				}
 			}
+
+			//Pared izquierda (x=-5)
+			if (vertice[j].x <= -5 && !goodPos) {
+				glm::vec4 posAux;
+
+			findPoint2:
+				for (int i = 0; i < 8; i++) {
+					std::cout << vertice[i].x << std::endl;
+					if (vertice[i].x < epsilon && vertice[i].x>-epsilon) {
+						//POSICION ENCONTRADA
+						goodPos = true;
+						glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
+						glm::vec4 Va = RigidBody::calcV(mlAux, mass);
+						glm::vec3 amAux = RigidBody::angularMoment(LastAngMoment, timeAux, tor);
+						glm::vec3 omegaAux = RigidBody::w(amAux, lastI);
+						glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertice[i] - (glm::vec3)posAux));
+						float Vrel = glm::dot(glm::vec3(0, 1, 0), pad);
+						float j = 1;/* (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertice[i], lastI * (glm::cross((glm::vec3)vertice[i], glm::vec3(0, 1, 0))))));*/
+						glm::vec3 J = j * glm::vec3(0, 1, 0);
+						glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertice[i], J);
+
+						(glm::vec3)vertice[i] = (glm::vec3)Lastvertice + J;
+						LastAngMoment = AngMoment + torqueImpulse;
+					}
+					else {
+						if (vertice[i].x > epsilon) {
+							timeAux = dt - timeAux / 2;
+							posAux = RigidBody::nextX(lastX, timeAux, velocity);
+						}
+						else if (vertice[i].x < -epsilon) {
+							timeAux /= 2;
+							posAux = RigidBody::nextX(lastX, timeAux, velocity);
+						}
+						goto findPoint2;
+					}
+
+
+				}
+			}
+
+				//Pared derecha (x=5)
+				if (vertice[j].x >= 5 && !goodPos) {
+					glm::vec4 posAux;
+
+				findPoint3:
+					for (int i = 0; i < 8; i++) {
+						std::cout << vertice[i].x << std::endl;
+						if (vertice[i].x < epsilon && vertice[i].x>-epsilon) {
+							//POSICION ENCONTRADA
+							goodPos = true;
+							glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
+							glm::vec4 Va = RigidBody::calcV(mlAux, mass);
+							glm::vec3 amAux = RigidBody::angularMoment(LastAngMoment, timeAux, tor);
+							glm::vec3 omegaAux = RigidBody::w(amAux, lastI);
+							glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertice[i] - (glm::vec3)posAux));
+							float Vrel = glm::dot(glm::vec3(0, 1, 0), pad);
+							float j = 1;/* (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertice[i], lastI * (glm::cross((glm::vec3)vertice[i], glm::vec3(0, 1, 0))))));*/
+							glm::vec3 J = j * glm::vec3(0, 1, 0);
+							glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertice[i], J);
+
+							(glm::vec3)vertice[i] = (glm::vec3)Lastvertice + J;
+							LastAngMoment = AngMoment + torqueImpulse;
+						}
+						else {
+							if (vertice[i].x > epsilon) {
+								timeAux = dt - timeAux / 2;
+								posAux = RigidBody::nextX(lastX, timeAux, velocity);
+							}
+							else if (vertice[i].x < -epsilon) {
+								timeAux /= 2;
+								posAux = RigidBody::nextX(lastX, timeAux, velocity);
+							}
+							goto findPoint3;
+						}
+
+
+					}
+				
+
+				}
+
+
+				//Suelo(y=0)
+				if (vertice[j].y >= 10 && !goodPos) {
+					glm::vec4 posAux;
+
+				findPoint4:
+					for (int i = 0; i < 8; i++) {
+						std::cout << vertice[i].y << std::endl;
+						if (vertice[i].y < epsilon && vertice[i].y>-epsilon) {
+							//POSICION ENCONTRADA
+							goodPos = true;
+							glm::vec4 mlAux = RigidBody::nextP(llMoment, timeAux, F);
+							glm::vec4 Va = RigidBody::calcV(mlAux, mass);
+							glm::vec3 amAux = RigidBody::angularMoment(LastAngMoment, timeAux, tor);
+							glm::vec3 omegaAux = RigidBody::w(amAux, lastI);
+							glm::vec3 pad = (glm::vec3)Va + glm::cross(omegaAux, ((glm::vec3)vertice[i] - (glm::vec3)posAux));
+							float Vrel = glm::dot(glm::vec3(0, 1, 0), pad);
+							float j = 1;/* (-(1.f + 0.5f)*Vrel) / ((1 / mass) + glm::dot(glm::vec3(0, 1, 0), glm::cross((glm::vec3)vertice[i], lastI * (glm::cross((glm::vec3)vertice[i], glm::vec3(0, 1, 0))))));*/
+							glm::vec3 J = j * glm::vec3(0, 1, 0);
+							glm::vec3 torqueImpulse = glm::cross((glm::vec3)vertice[i], J);
+
+							(glm::vec3)vertice[i] = (glm::vec3)Lastvertice + J;
+							LastAngMoment = AngMoment + torqueImpulse;
+						}
+						else {
+							if (vertice[i].y > epsilon) {
+								timeAux = dt - timeAux / 2;
+								posAux = RigidBody::nextX(lastX, timeAux, velocity);
+							}
+							else if (vertice[i].y < -epsilon) {
+								timeAux /= 2;
+								posAux = RigidBody::nextX(lastX, timeAux, velocity);
+							}
+							goto findPoint4;
+						}
+
+
+					}
+				}
+
+
+
 		}
 	/*}*/
 
