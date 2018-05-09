@@ -7,6 +7,14 @@
 
 #include "GL_framework.h"
 
+extern float sphereForce;
+extern float sphereMass;
+namespace SphereVars {
+	extern glm::vec3 pos, lastPos;
+	extern glm::vec3 vel, lastVel;
+	extern glm::vec3 F;
+}
+
 ///////// fw decl
 namespace ImGui {
 	void Render();
@@ -124,16 +132,16 @@ void GLinit(int width, int height) {
 	// Setup shaders & geometry
 	Box::setupCube();
 	Axis::setupAxis();
-	Cube::setupCube();
+	//Sphere::setupSphere();
 	setupPrims();
-	//Sphere::setupSphere(VAR::C,VAR::SphereRad);
+	Sphere::setupSphere(SphereVars::pos,VAR::SphereRad);
 	//Capsule::setupCapsule(VAR::c1,VAR::c2,VAR::CapusleRad);
 }
 
 void GLcleanup() {
 	Box::cleanupCube();
 	Axis::cleanupAxis();
-	Cube::cleanupCube();
+	Sphere::cleanupSphere();
 	cleanupPrims();
 	//Sphere::cleanupSphere();
 	//Capsule::cleanupCapsule();
@@ -152,8 +160,9 @@ void GLrender() {
 	// render code
 	Box::drawCube();
 	Axis::drawAxis();
-	Cube::drawCube();
 	//Sphere::drawSphere();
+	Sphere::setupSphere(SphereVars::pos, VAR::SphereRad);
+	Sphere::drawSphere();
 	//Capsule::drawCapsule();
 	renderPrims();
 
