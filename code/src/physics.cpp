@@ -9,6 +9,10 @@
 
 float sphereMass = 1.f;
 float sphereForce;
+glm::vec3 BuoyancyF;
+glm::vec3 g = {0,9.81,0};
+glm::vec3 y = {0,1,0};
+float volumenSub;
 
 namespace ClothMesh {
 	void updateClothMesh(float*array_data);
@@ -123,21 +127,6 @@ void PhysicsUpdate(float dt) {
 	}
 
 	//Sphere Euler Solver
-	glm::vec3 BuoyancyF = { 0,9.81,0 };
-	glm::vec3 FTot = BuoyancyF - SphereVars::F;
-
-
-	//if (SphereVars::lastPos.y <= 4) {
-	//	glm::vec3 temp = { 0, A*cos(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + A2*cos(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2),0 };
-	//	SphereVars::lastPos.y = A*cos(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + A2*cos(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2)+4;
-	//	SphereVars::pos.y = temp.y;
-	//}
-	//else {
-
-	//glm::vec3 temp = SphereVars::lastPos + dt*FTot;
-	//SphereVars::lastPos = SphereVars::lastPos + dt*FTot;
-	//SphereVars::pos = temp;
-	//}
 
 	int count = 0;
 	simTime += dt;
@@ -154,17 +143,19 @@ void PhysicsUpdate(float dt) {
 			count += 3;
 		}
 	}
+		BuoyancyF = 1.f * g * ((4.f / 3.f * 3.14f * 1.f)/2.f ) * y;
+	
+
+		SphereVars::pos = SphereVars::lastPos - (glm::normalize(K)*A*sin(glm::dot(K, SphereVars::lastPos) - w * simTime + phi) + glm::normalize(K2)*A2*sin(glm::dot(K2, SphereVars::lastPos) - w2 * simTime + phi2));
+		if (SphereVars::pos.y > 4) {
+			SphereVars::pos.y = A * cos(glm::dot(K, SphereVars::lastPos) - w * simTime + phi) + A2 * cos(glm::dot(K2, SphereVars::lastPos) - w2 * simTime + phi2) + 4;
+		}
+		if (SphereVars::pos.y < 4) {
+			SphereVars::pos.y = BuoyancyF.y/10 + 2;
+		}
+	
 
 	
-	SphereVars::pos = SphereVars::lastPos - (glm::normalize(K)*A*sin(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + glm::normalize(K2)*A2*sin(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2));
-	SphereVars::pos.y = A*cos(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + A2*cos(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2) + 4;
-
-	if (SphereVars::pos.y < 4) {
-			/*SphereVars::pos = SphereVars::lastPos - (glm::normalize(K)*A*sin(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + glm::normalize(K2)*A2*sin(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2));
-			SphereVars::pos.y += BuoyancyF.y;*/
-	}
-
-	//SphereVars::pos = SphereVars::lastPos - (glm::normalize(K)*A*sin(glm::dot(K, SphereVars::lastPos) - w*simTime + phi) + glm::normalize(K2)*A2*sin(glm::dot(K2, SphereVars::lastPos) - w2*simTime + phi2));
 	
 	ClothMesh::updateClothMesh(arr);
 }
